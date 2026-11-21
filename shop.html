@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script>(function(){var t;try{t=localStorage.getItem("believe-theme")}catch(e){}if(!t)t=matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light";document.documentElement.dataset.theme=t})()</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<title>Shop · BELIEVE Pharmacy</title>
+<meta name="description" content="Cosmetics, supplements and medical supplies from BELIEVE Pharmacy in Gulu, Uganda.">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="shop">
+<nav><div class="wrap">
+  <a class="brand" href="index.html"><img alt="" src="favicon.svg">BELIEVE Pharmacy</a>
+  <div class="links" id="navLinks"><a class="l" href="shop.html" aria-current="page">Shop</a><a class="l" href="prescriptions.html">Prescriptions</a><a class="l" href="consult.html">Consult</a><a class="l" href="careers.html">Careers</a><a class="l" href="contact.html">Contact</a><a class="l" href="#" id="trackL">Track order</a></div>
+  <button class="cartbtn" id="acct">Sign in</button><button class="cartbtn" id="theme" aria-label="Switch between light and dark mode">☾</button>
+  <button class="cartbtn" id="openCart" aria-label="Open basket">Basket <b id="count">0</b></button>
+  <button class="cartbtn menu" id="menuBtn" aria-label="Menu" aria-expanded="false" aria-controls="navLinks">Menu</button>
+</div></nav>
+
+<main>
+<section id="shop"><div class="wrap">
+  <h1 class="pt">Shop health essentials.</h1>
+  <p class="sub">Cosmetics, supplements and medical supplies, ready to order.</p>
+  <p class="note" style="text-align:center;margin:-22px auto 28px;max-width:52ch">Prescription medicines are not sold in the shop. Send your <a href="prescriptions.html" style="color:var(--p)">prescription here</a> and we will prepare it for you.</p>
+  <div class="tools"><input id="q" type="search" placeholder="Search products" aria-label="Search products"></div>
+  <div class="chips" id="chips" style="margin-bottom:28px"></div>
+  <div class="grid" id="grid"></div>
+</div></section>
+</main>
+
+<footer><div class="soc" id="soc" aria-label="Follow BELIEVE Pharmacy"></div>© 2026 BELIEVE Pharmacy, Gulu, Uganda. Information on this site does not replace a medical examination. Always read labels and follow professional advice.</footer>
+
+<dialog id="auth" aria-label="Account">
+  <div id="vAuth">
+    <h3 id="aTitle">Sign in</h3><p class="note" id="aMsg">Track your orders and check out faster.</p>
+    <form id="authF">
+      <label class="su">Full name<input name="name" autocomplete="name"></label>
+      <label class="su">Phone (WhatsApp)<input name="phone" type="tel" autocomplete="tel"></label>
+      <label>Email<input name="email" type="email" autocomplete="email" required></label>
+      <label>Password<input name="pw" type="password" minlength="6" autocomplete="current-password" required></label>
+      <div class="err" id="aErr" role="alert"></div>
+      <button class="btn" id="aGo" type="submit">Sign in</button>
+      <button class="link" type="button" id="aSwap">New here? Create an account</button>
+    </form>
+    <button class="link" type="button" data-close style="margin-top:14px">Close</button>
+  </div>
+  <div id="vAcc" hidden></div>
+</dialog>
+<a class="wa" href="https://wa.me/256709714959" target="_blank" rel="noopener" aria-label="Chat with BELIEVE Pharmacy on WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 00-8.6 15L2 22l5.1-1.4A10 10 0 1012 2zm5.2 14.2c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .6l-.4.6c-.2.2-.3.4-.1.7.7 1.1 1.6 2 2.7 2.600.3.1.5.1.7-.1l.8-1c.2-.3.4-.2.6-.1l2 .9c.3.1.5.2.6.3.1.1.1.6-.1 1.300z"/></svg>WhatsApp</a>
+<dialog id="pdlg" aria-label="Product details"><div id="pBody"></div></dialog>
+<div id="veil"></div>
+<aside id="drawer" aria-label="Basket">
+  <header>Your basket <button class="btn ghost sm" id="closeCart">Close</button></header>
+  <div class="items" id="items"></div>
+  <footer>
+    <div class="tot"><span>Total</span><span id="total">UGX 0</span></div>
+    <select id="cDel" aria-label="Delivery"><option>Collect in store</option><option>Deliver in Gulu</option></select>
+    <input id="cAddr" placeholder="Delivery address (if delivering)" aria-label="Address">
+    <select id="cPay" aria-label="Payment"><option>Pay with MTN Mobile Money</option><option>Pay with Airtel Money</option><option>Pay on collection / delivery</option></select>
+    <button class="btn" id="place">Place order</button>
+    <div class="ok" id="oOk"></div>
+  </footer>
+</aside>
+<script src="app.js" defer></script>
+</body>
+</html>
