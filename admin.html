@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Admin · BELIEVE Pharmacy</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<style>
+:root{--p:#6d28d9;--p2:#8b5cf6;--pl:#f5f0ff;--ink:#1d1d1f;--mute:#6e6e73;--line:#e8e8ed;--w:#fff;--bg:#fbfbfd;--f2:#d2d2d7}
+@media(prefers-color-scheme:dark){:root{--p:#8b5cf6;--pl:#221838;--ink:#f5f5f7;--mute:#a1a1a6;--line:#2c2c2e;--w:#161618;--bg:#0b0b0c;--f2:#3a3a3c}}
+*{box-sizing:border-box;margin:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",Inter,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--p2);outline-offset:2px}
+.top{display:flex;gap:16px;align-items:center;padding:14px 22px;background:var(--w);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.top b{margin-right:auto}.top a,.link{color:var(--p);background:none;border:0;cursor:pointer;font-size:14px;text-decoration:none}
+main{max-width:980px;margin:0 auto;padding:28px 22px 80px}
+h1{font-size:30px;letter-spacing:-.02em;margin-bottom:6px}
+.note{color:var(--mute);font-size:14px}
+.btn{border:0;border-radius:99px;padding:10px 20px;background:var(--p);color:#fff;cursor:pointer}
+.btn.g{background:transparent;color:var(--p);border:1px solid var(--f2)}.btn.sm{padding:6px 14px;font-size:14px}.btn.d{background:#d92d20}
+.btn:disabled{opacity:.5}
+.panel{background:var(--w);border:1px solid var(--line);border-radius:18px;padding:22px;margin-top:18px}
+form{display:grid;gap:12px}.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}.three{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:620px){.two,.three{grid-template-columns:1fr}}
+label{font-size:13px;color:var(--mute);display:grid;gap:6px}
+input,select,textarea{border:1px solid var(--f2);border-radius:12px;padding:10px 12px;background:var(--w);width:100%}
+.tabs{display:flex;gap:8px;margin:18px 0 0}.tabs button{border:1px solid var(--f2);background:var(--w);border-radius:99px;padding:8px 16px;cursor:pointer}
+.tabs button[aria-pressed=true]{background:var(--ink);color:var(--w);border-color:var(--ink)}
+.msg{font-size:14px;min-height:1.2em;margin-top:8px}.msg.e{color:#d92d20}.msg.o{color:#05603a}
+.row{display:grid;grid-template-columns:56px 1fr auto;gap:14px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.row img,.row .ph{width:56px;height:56px;border-radius:0;object-fit:cover;background:var(--pl);display:grid;place-items:center;font-size:26px}
+.row .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.off{opacity:.55}
+.cchip{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--f2);border-radius:99px;padding:4px 6px 4px 14px;margin:0 6px 6px 0;font-size:14px}.cchip button{border:0;background:none;cursor:pointer;color:var(--mute);font-size:18px;line-height:1}
+.row2{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.row2 .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.ord{padding:16px 0;border-bottom:1px solid var(--line);display:grid;gap:6px;font-size:15px}
+.ord .h{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="top"><b>BELIEVE Pharmacy · Admin</b><span class="note" id="who"></span><a href="index.html">View site</a><button class="link" id="alertBtn" hidden>Turn on alerts</button><button class="link" id="out" hidden>Sign out</button></div>
+
+<main id="login" hidden>
+  <h1>Admin sign in</h1><p class="note">For BELIEVE Pharmacy staff only.</p>
+  <form class="panel" id="lf" style="max-width:420px">
+    <label>Email<input name="email" type="email" autocomplete="username" required></label>
+    <label>Password<input name="pw" type="password" autocomplete="current-password" required></label>
+    <button class="btn" type="submit">Sign in</button><div class="msg e" id="lm" role="alert"></div>
+  </form>
+</main>
+
+<main id="app" hidden>
+  <div class="tabs" id="tabs">
+    <button data-t="products" aria-pressed="true">Products</button><button data-t="orders" aria-pressed="false">Orders</button><button data-t="rx" aria-pressed="false">Prescriptions</button><button data-t="careers" aria-pressed="false">Careers</button><button data-t="offers" aria-pressed="false">Offers</button>
+  </div>
+
+  <section id="t-products">
+    <div class="panel">
+      <h1 id="pt">Add a product</h1>
+      <form id="pf">
+        <label>Name<input name="name" required maxlength="120"></label>
+        <div class="three">
+          <label>Category<select name="category" id="catSel" required></select></label>
+          <label>Price (UGX)<input name="price" type="number" min="0" step="100" required></label>
+          <label>Stock<input name="stock" type="number" min="0" value="10" required></label>
+        </div>
+        <label>Product description (optional). Shown only on the product's own page when a customer clicks it.<textarea name="description" rows="5" maxlength="2000"></textarea></label>
+        <p class="note">Only list cosmetics, supplements and medical supplies here. Do not list prescription-only medicines on the public shop.</p>
+        <div class="two"><label>Sale price (UGX, optional)<input name="salep" type="number" min="0" step="100"></label><label>Sale ends (optional)<input name="salee" type="datetime-local"></label></div>
+        <label>Photo (optional)<input name="img" id="img" type="file" accept="image/*"></label>
+        <label style="display:flex;gap:8px;align-items:center;font-size:15px;color:var(--ink)"><input type="checkbox" name="active" checked style="width:auto"> Show in the shop</label>
+        <div style="display:flex;gap:10px"><button class="btn" id="psave" type="submit">Save product</button><button class="btn g" id="pcancel" type="button" hidden>Cancel edit</button></div>
+        <div class="msg" id="pm" role="status"></div>
+      </form>
+    </div>
+    <div class="panel"><h1 style="font-size:22px">Categories</h1><p class="note">Categories become the filter buttons on the shop. Pick one for each product above. Do not create categories for prescription-only medicines.</p>
+      <div id="catList" style="margin-top:12px"></div>
+      <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap"><input id="catNew" placeholder="New category, e.g. Baby care" maxlength="40" style="max-width:280px"><button class="btn sm" id="catAdd" type="button">Add category</button></div>
+      <div class="msg" id="catM" role="status"></div></div>
+    <div class="panel"><h1 style="font-size:22px">All products</h1><div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:6px"><button class="btn sm g" id="mkThumbs" type="button">Optimize existing photos</button><span class="note" id="thM">Makes the shop load faster. Run it once after uploading photos from an older version.</span></div><div id="plist"></div></div>
+  </section>
+
+  <section id="t-orders" hidden><div class="panel"><h1>Orders</h1><p class="note">Newest first. Change the status and the customer sees it on their account.</p><div id="olist"></div></div></section>
+  <section id="t-rx" hidden><div class="panel"><h1>Prescriptions</h1><p class="note">Private files. Links open for 5 minutes.</p><div id="rlist"></div></div></section>
+  <section id="t-offers" hidden>
+    <div class="panel">
+      <h1>Sale banner</h1><p class="note">Shows as a strip at the top of every page. Set a sale price on each product in the Products tab to put it on the Deals page.</p>
+      <form id="bf">
+        <label>Message<input name="btext" maxlength="140" placeholder="Deals all month. New offers every Friday."></label>
+        <div class="two"><label>Link<input name="blink" value="deals.html"></label><label>Ends (optional, shows a countdown)<input name="bends" type="datetime-local"></label></div>
+        <label style="display:flex;gap:8px;align-items:center;font-size:15px;color:var(--ink)"><input type="checkbox" name="bactive" style="width:auto"> Show the banner on the site</label>
+        <div><button class="btn" type="submit">Save banner</button></div><div class="msg" id="bm" role="status"></div>
+      </form>
+    </div>
+  </section>
+  <section id="t-careers" hidden>
+    <div class="panel">
+      <h1 id="jt">Add a position</h1>
+      <form id="jf">
+        <label>Job title<input name="jtitle" required maxlength="100"></label>
+        <label>Description<textarea name="jdesc" rows="3" maxlength="500"></textarea></label>
+        <label style="display:flex;gap:8px;align-items:center;font-size:15px;color:var(--ink)"><input type="checkbox" name="jactive" checked style="width:auto"> Open for applications</label>
+        <div style="display:flex;gap:10px"><button class="btn" type="submit">Save position</button><button class="btn g" id="jcancel" type="button" hidden>Cancel edit</button></div>
+        <div class="msg" id="jm" role="status"></div>
+      </form>
+    </div>
+    <div class="panel"><h1 style="font-size:22px">Positions</h1><p class="note">Turn a position off to hide it from the careers page. Turn it on to open it again.</p><div id="jlist"></div></div>
+    <div class="panel"><h1 style="font-size:22px">Applications</h1><p class="note">Newest first. CV links open for 5 minutes.</p><div id="alist"></div></div>
+  </section>
+</main>
+
+<script>
+// ===== SETTINGS: same two values as in index.html =====
+const SUPABASE_URL = "https://xlrwvbitiohlgsiizrrh.supabase.co";       // e.g. "https://abcdxyz.supabase.co"
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhscnd2Yml0aW9obGdzaWl6cnJoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUyMzc1OTQsImV4cCI6MjExMDgxMzU5NH0.ouCWdL5qJ0YYvL3VWugscK-Ov1GxXiLn_uN7EC1Ds-w";  // the "anon public" key (never the service_role key)
+// =======================================================
+const $=s=>document.querySelector(s),fmt=n=>"UGX "+Number(n).toLocaleString("en-US");
+const esc=t=>String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const STEPS=["Received","Confirmed","Preparing","Ready or on the way","Completed"],RX=["received","verified","ready","rejected"];
+const SB=(SUPABASE_URL&&SUPABASE_ANON_KEY&&window.supabase)?supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null;
+let me=null,editId=null,products=[];
+const show=id=>{["login","app"].forEach(x=>$("#"+x).hidden=x!==id)};
+async function boot(){
+  if(!SB){show("login");$("#lm").textContent="Not connected yet. Add your Supabase URL and anon key at the top of this file.";return}
+  const {data:{session}}=await SB.auth.getSession();
+  if(!session){show("login");return}
+  const {data:p}=await SB.from("profiles").select("name,is_admin").eq("id",session.user.id).maybeSingle();
+  $("#out").hidden=false;$("#who").textContent=session.user.email;
+  if(!p||!p.is_admin){show("login");$("#lm").textContent="This account is not an admin. Sign out and use an admin account.";return}
+  me=session.user;show("app");loadCategories();loadProducts();startAlerts();
+}
+$("#lf").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target);$("#lm").textContent="";
+  if(!SB){return}
+  const {error}=await SB.auth.signInWithPassword({email:f.get("email").trim(),password:f.get("pw")});
+  if(error){$("#lm").textContent="Email or password is incorrect.";return}
+  e.target.reset();boot()};
+$("#out").onclick=async()=>{await SB.auth.signOut();me=null;$("#out").hidden=true;$("#who").textContent="";show("login")};
+$("#tabs").onclick=e=>{const b=e.target.closest("button");if(!b)return;
+  document.querySelectorAll("#tabs button").forEach(x=>x.setAttribute("aria-pressed",x===b));
+  ["products","orders","rx","careers","offers"].forEach(t=>$("#t-"+t).hidden=t!==b.dataset.t);
+  ({products:loadProducts,orders:loadOrders,rx:loadRx,careers:loadCareers,offers:loadOffers})[b.dataset.t]()};
+
+// ---------- Products ----------
+function shrink(file,max=900){return new Promise((res,rej)=>{const img=new Image(),u=URL.createObjectURL(file);
+  img.onload=()=>{const k=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement("canvas");c.width=Math.round(img.width*k);c.height=Math.round(img.height*k);
+    const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(u);c.toBlob(b=>b?res(b):rej(new Error("x")),"image/jpeg",.82)};
+  img.onerror=()=>rej(new Error("x"));img.src=u})}
+const localInput=d=>{const x=new Date(d),z=n=>String(n).padStart(2,"0");return x.getFullYear()+"-"+z(x.getMonth()+1)+"-"+z(x.getDate())+"T"+z(x.getHours())+":"+z(x.getMinutes())};
+let cats=[];
+async function loadCategories(){
+  const {data,error}=await SB.from("categories").select("name").order("sort").order("name");
+  if(error)return;cats=data.map(x=>x.name);
+  const keep=$("#catSel").value;
+  $("#catSel").innerHTML=cats.map(c=>`<option>${esc(c)}</option>`).join("");
+  if(cats.includes(keep))$("#catSel").value=keep;
+  $("#catList").innerHTML=cats.map(c=>`<span class="cchip">${esc(c)}<button type="button" data-cd="${esc(c)}" aria-label="Delete ${esc(c)}">×</button></span>`).join("")}
+$("#catAdd").onclick=async()=>{const v=$("#catNew").value.trim(),m=$("#catM");m.className="msg";if(!v)return;
+  const {error}=await SB.from("categories").insert({name:v,sort:cats.length+1});
+  if(error){m.className="msg e";m.textContent=/duplicate/i.test(error.message)?"That category already exists.":"Could not add the category.";return}
+  $("#catNew").value="";m.className="msg o";m.textContent="Added. You can now pick it for a product.";loadCategories()};
+$("#catList").onclick=async e=>{const n=e.target.dataset.cd;if(!n||!confirm(`Delete the category "${n}"?`))return;const m=$("#catM");
+  const {error}=await SB.from("categories").delete().eq("name",n);
+  if(error){m.className="msg e";m.textContent="That category still has products. Move or delete them first.";return}
+  m.className="msg o";m.textContent="Deleted.";loadCategories()};
+async function loadProducts(){
+  const {data,error}=await SB.from("products").select("*").order("category").order("name");
+  if(error){$("#plist").innerHTML='<p class="msg e">Could not load products.</p>';return}
+  products=data;
+  $("#plist").innerHTML=data.length?data.map(p=>`<div class="row ${p.active?"":"off"}">${p.image_url?`<img src="${esc(p.thumb_url||p.image_url)}" alt="" loading="lazy">`:`<div class="ph" title="No photo">–</div>`}
+   <div><b>${esc(p.name)}</b><div class="note">${esc(p.category)} · ${p.sale_price!=null?`<s>${fmt(p.price)}</s> ${fmt(p.sale_price)} (sale)`:fmt(p.price)} · stock ${p.stock}${p.active?"":" · hidden"}</div></div>
+   <div class="acts"><button class="btn sm g" data-e="${p.id}">Edit</button><button class="btn sm g" data-v="${p.id}">${p.active?"Hide":"Show"}</button><button class="btn sm d" data-d="${p.id}">Delete</button></div></div>`).join(""):'<p class="note" style="margin-top:12px">No products yet. Add your first one above.</p>'}
+$("#plist").onclick=async e=>{const t=e.target.dataset;
+  if(t.e){const p=products.find(x=>x.id==t.e),f=$("#pf");editId=p.id;$("#pt").textContent="Edit product";
+    f.name.value=p.name;f.category.value=p.category;f.price.value=p.price;f.stock.value=p.stock;f.description.value=p.description||"";f.salep.value=p.sale_price??"";f.salee.value=p.sale_ends?localInput(p.sale_ends):"";f.active.checked=p.active;
+    $("#pcancel").hidden=false;$("#pm").textContent="Choose a new photo only if you want to replace the current one.";scrollTo({top:0,behavior:"smooth"})}
+  else if(t.v){const p=products.find(x=>x.id==t.v);await SB.from("products").update({active:!p.active}).eq("id",p.id);loadProducts()}
+  else if(t.d){const p=products.find(x=>x.id==t.d);if(confirm(`Delete "${p.name}" permanently?`)){await SB.from("products").delete().eq("id",p.id);loadProducts()}}};
+function resetForm(){editId=null;$("#pf").reset();$("#pt").textContent="Add a product";$("#pcancel").hidden=true;$("#pm").textContent=""}
+$("#pcancel").onclick=resetForm;
+$("#mkThumbs").onclick=async()=>{const m=$("#thM"),todo=products.filter(p=>p.image_url&&!p.thumb_url);
+  if(!todo.length){m.textContent="All photos are already optimized.";return}
+  for(let i=0;i<todo.length;i++){const p=todo[i];m.textContent=`Optimizing ${i+1} of ${todo.length}…`;
+    try{const r=await fetch(p.image_url),blob=await shrink(await r.blob(),420),path=`t-${Date.now()}-${p.id}.jpg`;
+      const up=await SB.storage.from("product-images").upload(path,blob,{contentType:"image/jpeg",cacheControl:"31536000"});if(up.error)throw up.error;
+      const u=await SB.from("products").update({thumb_url:SB.storage.from("product-images").getPublicUrl(path).data.publicUrl}).eq("id",p.id);if(u.error)throw u.error}
+    catch(e){m.textContent="Stopped: could not optimize "+p.name+".";return}}
+  m.textContent="Done. Product photos now load faster.";loadProducts()};
+$("#pf").onsubmit=async e=>{e.preventDefault();const f=e.target,m=$("#pm"),btn=$("#psave");m.className="msg";m.textContent="Saving…";btn.disabled=true;
+  try{
+    const row={name:f.name.value.trim(),category:f.category.value,price:parseInt(f.price.value,10)||0,stock:parseInt(f.stock.value,10)||0,active:f.active.checked,description:f.description.value.trim()||null,sale_price:f.salep.value?parseInt(f.salep.value,10):null,sale_ends:f.salee.value?new Date(f.salee.value).toISOString():null};
+    if(row.sale_price!=null&&row.sale_price>=row.price)throw new Error("sale");
+    const file=$("#img").files[0];
+    if(file){const blob=await shrink(file,900),tblob=await shrink(file,420),stamp=Date.now(),path=`p-${stamp}.jpg`,tpath=`t-${stamp}.jpg`;
+      const upt=await SB.storage.from("product-images").upload(tpath,tblob,{contentType:"image/jpeg",cacheControl:"31536000"});if(upt.error)throw upt.error;
+      row.thumb_url=SB.storage.from("product-images").getPublicUrl(tpath).data.publicUrl;
+      const up=await SB.storage.from("product-images").upload(path,blob,{contentType:"image/jpeg",cacheControl:"31536000"});if(up.error)throw up.error;
+      row.image_url=SB.storage.from("product-images").getPublicUrl(path).data.publicUrl}
+    const r=editId?await SB.from("products").update(row).eq("id",editId):await SB.from("products").insert(row);
+    if(r.error)throw r.error;
+    resetForm();m.className="msg o";m.textContent="Saved. It is live in the shop.";loadProducts();
+  }catch(err){m.className="msg e";m.textContent=err&&err.message==="sale"?"The sale price must be lower than the normal price.":"Could not save. Check the details and try again."}
+  btn.disabled=false};
+
+// ---------- Orders ----------
+const waNum=p=>{let d=String(p||"").replace(/\D/g,"");if(d.startsWith("0"))d="256"+d.slice(1);return d};
+async function loadOrders(){
+  const {data,error}=await SB.from("orders").select("*").order("created_at",{ascending:false}).limit(100);
+  if(error){$("#olist").innerHTML='<p class="msg e">Could not load orders.</p>';return}
+  const ids=[...new Set(data.map(o=>o.user_id))],pr={};
+  if(ids.length){const {data:ps}=await SB.from("profiles").select("id,name,phone").in("id",ids);(ps||[]).forEach(p=>pr[p.id]=p)}
+  $("#olist").innerHTML=data.length?data.map(o=>{const c=pr[o.user_id]||{};return `<div class="ord"><div class="h"><b>${esc(o.code)} · ${fmt(o.total)}</b><span class="note">${new Date(o.created_at).toLocaleString("en-GB")}</span></div>
+   <div>${esc(c.name||"Customer")} · <a href="https://wa.me/${waNum(c.phone)}" target="_blank" rel="noopener">${esc(c.phone||"")}</a></div>
+   <div class="note">${(o.items||[]).map(x=>x.q+" × "+esc(x.n)).join(", ")}</div>
+   <div class="note">${esc(o.delivery||"")}${o.address?" · "+esc(o.address):""} · ${esc(o.payment||"")}</div>
+   <label>Status<select data-o="${o.id}">${STEPS.map((s,i)=>`<option value="${i}" ${i===o.status?"selected":""}>${s}</option>`).join("")}</select></label></div>`}).join(""):'<p class="note" style="margin-top:12px">No orders yet.</p>'}
+$("#olist").onchange=async e=>{const id=e.target.dataset.o;if(!id)return;const {error}=await SB.from("orders").update({status:parseInt(e.target.value,10)}).eq("id",id);if(error)alert("Could not update the status.");else refreshBadges()};
+
+// ---------- Prescriptions ----------
+async function loadRx(){
+  const {data,error}=await SB.from("prescriptions").select("*").order("created_at",{ascending:false}).limit(100);
+  if(error){$("#rlist").innerHTML='<p class="msg e">Could not load prescriptions.</p>';return}
+  $("#rlist").innerHTML=data.length?data.map(r=>`<div class="ord"><div class="h"><b>RX-${r.id} · ${esc(r.name||"")}</b><span class="note">${new Date(r.created_at).toLocaleString("en-GB")}</span></div>
+   <div><a href="https://wa.me/${waNum(r.phone)}" target="_blank" rel="noopener">${esc(r.phone||"")}</a> · ${esc(r.delivery||"")}</div>
+   ${r.notes?`<div class="note">${esc(r.notes)}</div>`:""}
+   <div style="display:flex;gap:12px;align-items:end;flex-wrap:wrap"><button class="btn sm" data-f="${esc(r.file_path)}">View prescription</button>
+   <label>Status<select data-r="${r.id}">${RX.map(s=>`<option ${s===r.status?"selected":""}>${s}</option>`).join("")}</select></label></div></div>`).join(""):'<p class="note" style="margin-top:12px">No prescriptions yet.</p>'}
+$("#rlist").onclick=async e=>{const f=e.target.dataset.f;if(!f)return;const {data,error}=await SB.storage.from("prescriptions").createSignedUrl(f,300);if(error)alert("Could not open the file.");else window.open(data.signedUrl,"_blank","noopener")};
+$("#rlist").onchange=async e=>{const id=e.target.dataset.r;if(!id)return;const {error}=await SB.from("prescriptions").update({status:e.target.value}).eq("id",id);if(error)alert("Could not update the status.")};
+
+// ---------- Careers ----------
+let jobs=[],jEdit=null;
+const AST=["new","reviewed","shortlisted","rejected"];
+async function loadCareers(){
+  const {data,error}=await SB.from("jobs").select("*").order("id");
+  if(error){$("#jlist").innerHTML='<p class="msg e">Could not load positions.</p>'}
+  else{jobs=data;$("#jlist").innerHTML=data.length?data.map(j=>`<div class="row2 ${j.active?"":"off"}"><div><b>${esc(j.title)}</b> <span class="note">· ${j.active?"Open":"Closed"}</span><div class="note">${esc(j.description||"")}</div></div>
+   <div class="acts"><button class="btn sm ${j.active?"g":""}" data-jt="${j.id}">${j.active?"Turn off":"Turn on"}</button><button class="btn sm g" data-je="${j.id}">Edit</button><button class="btn sm d" data-jd="${j.id}">Delete</button></div></div>`).join(""):'<p class="note" style="margin-top:12px">No positions yet. Add one above.</p>'}
+  const r=await SB.from("applications").select("*").order("created_at",{ascending:false}).limit(200);
+  if(r.error){$("#alist").innerHTML='<p class="msg e">Could not load applications.</p>';return}
+  $("#alist").innerHTML=r.data.length?r.data.map(a=>`<div class="ord"><div class="h"><b>${esc(a.name)} · ${esc(a.job_title)}</b><span class="note">${new Date(a.created_at).toLocaleString("en-GB")}</span></div>
+   <div><a href="https://wa.me/${waNum(a.phone)}" target="_blank" rel="noopener">${esc(a.phone)}</a>${a.email?` · <a href="mailto:${esc(a.email)}">${esc(a.email)}</a>`:""}</div>
+   ${a.message?`<div class="note">${esc(a.message)}</div>`:""}
+   <div style="display:flex;gap:12px;align-items:end;flex-wrap:wrap"><button class="btn sm" data-cv="${esc(a.cv_path)}">View CV</button>
+   <label>Status<select data-as="${a.id}">${AST.map(x=>`<option ${x===a.status?"selected":""}>${x}</option>`).join("")}</select></label></div></div>`).join(""):'<p class="note" style="margin-top:12px">No applications yet.</p>'}
+function resetJob(){jEdit=null;$("#jf").reset();$("#jt").textContent="Add a position";$("#jcancel").hidden=true;$("#jm").textContent=""}
+$("#jcancel").onclick=resetJob;
+$("#jlist").onclick=async e=>{const t=e.target.dataset;
+  if(t.jt){const j=jobs.find(x=>x.id==t.jt);await SB.from("jobs").update({active:!j.active}).eq("id",j.id);loadCareers()}
+  else if(t.je){const j=jobs.find(x=>x.id==t.je),f=$("#jf").elements;jEdit=j.id;$("#jt").textContent="Edit position";f.jtitle.value=j.title;f.jdesc.value=j.description||"";f.jactive.checked=j.active;$("#jcancel").hidden=false;scrollTo({top:0,behavior:"smooth"})}
+  else if(t.jd){const j=jobs.find(x=>x.id==t.jd);if(confirm(`Delete "${j.title}"? Past applications are kept.`)){await SB.from("jobs").delete().eq("id",j.id);loadCareers()}}};
+$("#jf").onsubmit=async e=>{e.preventDefault();const f=e.target.elements,m=$("#jm");m.className="msg";m.textContent="Saving…";
+  const row={title:f.jtitle.value.trim(),description:f.jdesc.value.trim()||null,active:f.jactive.checked};
+  const r=jEdit?await SB.from("jobs").update(row).eq("id",jEdit):await SB.from("jobs").insert(row);
+  if(r.error){m.className="msg e";m.textContent="Could not save. Please try again.";return}
+  resetJob();m.className="msg o";m.textContent="Saved.";loadCareers()};
+$("#alist").onclick=async e=>{const c=e.target.dataset.cv;if(!c)return;const {data,error}=await SB.storage.from("cvs").createSignedUrl(c,300);if(error)alert("Could not open the CV.");else window.open(data.signedUrl,"_blank","noopener")};
+$("#alist").onchange=async e=>{const id=e.target.dataset.as;if(!id)return;const {error}=await SB.from("applications").update({status:e.target.value}).eq("id",id);if(error)alert("Could not update the status.")};
+// ---------- Offers (banner) ----------
+async function loadOffers(){
+  const {data}=await SB.from("site_settings").select("*").eq("id",1).maybeSingle();if(!data)return;
+  const f=$("#bf").elements;f.btext.value=data.banner_text||"";f.blink.value=data.banner_link||"deals.html";f.bends.value=data.banner_ends?localInput(data.banner_ends):"";f.bactive.checked=!!data.banner_active}
+$("#bf").onsubmit=async e=>{e.preventDefault();const f=e.target.elements,m=$("#bm");m.className="msg";m.textContent="Saving…";
+  const {error}=await SB.from("site_settings").update({banner_text:f.btext.value.trim()||null,banner_link:f.blink.value.trim()||"deals.html",banner_ends:f.bends.value?new Date(f.bends.value).toISOString():null,banner_active:f.bactive.checked}).eq("id",1);
+  if(error){m.className="msg e";m.textContent="Could not save. Please try again.";return}
+  m.className="msg o";m.textContent="Saved. The banner is updated on the site."};
+// ---------- Live alerts ----------
+let ac=null,soundOn=false,unseen=0;const baseTitle=document.title;
+function beep(){if(!soundOn||!ac)return;try{const o=ac.createOscillator(),g=ac.createGain();o.connect(g);g.connect(ac.destination);o.frequency.value=880;g.gain.setValueAtTime(.15,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.6);o.start();o.stop(ac.currentTime+.6)}catch(e){}}
+function toast(msg){const t=document.createElement("div");t.className="toast";t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),7000)}
+$("#alertBtn").onclick=async()=>{try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();await ac.resume();soundOn=true;beep()}catch(e){}
+  if("Notification" in window&&Notification.permission==="default"){try{await Notification.requestPermission()}catch(e){}}
+  $("#alertBtn").textContent="Alerts are on";toast("Alerts are on. Keep this page open to hear new orders.")};
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){unseen=0;document.title=baseTitle}});
+async function badge(tab,label,q){const {count}=await q;const b=document.querySelector(`#tabs [data-t="${tab}"]`);if(b)b.innerHTML=label+(count?` <span class="nb">${count}</span>`:"")}
+function refreshBadges(){
+  badge("orders","Orders",SB.from("orders").select("id",{count:"exact",head:true}).eq("status",0));
+  badge("rx","Prescriptions",SB.from("prescriptions").select("id",{count:"exact",head:true}).eq("status","received"));
+  badge("careers","Careers",SB.from("applications").select("id",{count:"exact",head:true}).eq("status","new"))}
+function onNew(kind,detail,tab,reload){
+  unseen++;if(document.hidden)document.title=`(${unseen}) New ${kind} · Admin`;
+  beep();toast(`New ${kind}: ${detail}`);
+  if("Notification" in window&&Notification.permission==="granted"){try{new Notification("BELIEVE Pharmacy: new "+kind,{body:detail})}catch(e){}}
+  refreshBadges();if(!$("#t-"+tab).hidden)reload()}
+function startAlerts(){
+  $("#alertBtn").hidden=false;refreshBadges();setInterval(refreshBadges,60000);
+  SB.channel("admin-alerts")
+   .on("postgres_changes",{event:"INSERT",schema:"public",table:"orders"},p=>onNew("order",`${p.new.code} · ${fmt(p.new.total)}`,"orders",loadOrders))
+   .on("postgres_changes",{event:"INSERT",schema:"public",table:"prescriptions"},p=>onNew("prescription",`RX-${p.new.id} from ${p.new.name||"a customer"}`,"rx",loadRx))
+   .on("postgres_changes",{event:"INSERT",schema:"public",table:"applications"},p=>onNew("job application",`${p.new.name} for ${p.new.job_title}`,"careers",loadCareers))
+   .subscribe()}
+boot();
+</script>
+</body>
+</html>

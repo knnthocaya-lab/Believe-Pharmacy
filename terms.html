@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://xlrwvbitiohlgsiizrrh.supabase.co" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<script>(function(){var t;try{t=localStorage.getItem("believe-theme")}catch(e){}if(!t)t=matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light";document.documentElement.dataset.theme=t})()</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" defer></script>
+<title>Terms of Use · BELIEVE Pharmacy</title>
+<meta name="description" content="Terms for using the BELIEVE Pharmacy website and ordering from us.">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="terms">
+<div class="promo" id="promo" hidden><a id="promoT" href="deals.html"></a><span class="promo-c" id="promoC"></span><button id="promoX" aria-label="Dismiss this message">×</button></div>
+<nav><div class="wrap">
+  <a class="brand" href="index.html"><img alt="" src="favicon.svg">BELIEVE Pharmacy</a>
+  <div class="links" id="navLinks"><a class="l" href="shop.html">Shop</a><a class="l deal" href="deals.html">Deals</a><a class="l" href="prescriptions.html">Prescriptions</a><a class="l" href="consult.html">Consult</a><a class="l" href="careers.html">Careers</a><a class="l" href="#" id="trackL">Track order</a></div>
+  <button class="cartbtn" id="acct">Sign in</button><button class="cartbtn" id="theme" aria-label="Switch between light and dark mode">☾</button>
+  <a class="cartbtn" href="saved.html" id="favLink" aria-label="Saved products">♡ <b id="favCount" hidden>0</b></a>
+  <button class="cartbtn" id="openCart" aria-label="Open basket">Basket <b id="count">0</b></button>
+  <button class="cartbtn menu" id="menuBtn" aria-label="Menu" aria-expanded="false" aria-controls="navLinks">Menu</button>
+</div></nav>
+
+<main>
+<section><div class="wrap legal">
+<div class="draftnote"><b>Draft for review.</b> Ask a local legal adviser to check this page and fill in the highlighted items. Then delete this box.</div>
+<h1 class="pt" style="text-align:left">Terms of Use</h1>
+<p class="note">Last updated: 25 November 2026</p>
+
+<h2>About these terms</h2>
+<p>These terms apply when you use the BELIEVE Pharmacy website and order from us. BELIEVE Pharmacy <span class="fill">[legal company name]</span> is based in Gulu, Uganda. By using the site you agree to them.</p>
+
+<h2>Your account</h2>
+<p>Give us correct details and keep your password private. You are responsible for what happens under your account. Tell us if you think someone else has used it.</p>
+
+<h2>Products and prices</h2>
+<p>Prices are in Ugandan shillings (UGX). Sale prices last until the end time shown. We try to keep prices, photos and stock accurate, but mistakes can happen and we may cancel an order affected by an obvious error. Product pages give general information and are not medical advice.</p>
+
+<h2>Orders and payment</h2>
+<p>When you place an order, you are asking us to supply the items. We accept it when we confirm it to you, and we may decline or limit an order. Pay by <span class="fill">[the payment methods you accept, for example Mobile Money or cash on delivery or collection]</span>.</p>
+
+<h2>Delivery and collection</h2>
+<p>We deliver in <span class="fill">[delivery areas]</span> and you can collect from either branch. Delivery fee: <span class="fill">[fee or free-delivery amount]</span>. Times we give are estimates, not guarantees.</p>
+
+<h2>Prescriptions</h2>
+<p>Prescription medicines are supplied only against a valid prescription from a licensed prescriber, after our pharmacist has checked it. The pharmacist may ask you questions, contact your prescriber, or decline to supply. Uploading a prescription does not guarantee supply.</p>
+
+<h2>Pharmacist advice</h2>
+<p>Advice from our pharmacists is general guidance based on what you tell us. It is not a diagnosis and does not replace seeing a doctor. In an emergency go to the nearest hospital straight away.</p>
+
+<h2>Returns and refunds</h2>
+<p>For safety, medicines and health products cannot be returned once sold unless they are faulty, damaged or not what you ordered. <span class="fill">[return window and refund method]</span> Contact us as soon as you notice a problem.</p>
+
+<h2>Using the site</h2>
+<p>Do not misuse the site, try to break into it, or send us false or harmful content. We may suspend accounts that do.</p>
+
+<h2>Our responsibility</h2>
+<p>We will take reasonable care in supplying products and running the site. We are not responsible for losses we could not reasonably foresee, or for the site being unavailable from time to time. Nothing here limits rights you have by law. <span class="fill">[adviser to review]</span></p>
+
+<h2>Changes and law</h2>
+<p>We may update these terms and will change the date above. These terms are governed by the laws of Uganda.</p>
+
+<h2>Contact</h2>
+<p>BELIEVE Pharmacy, Gulu. Phone 0393 001 498 or 0393 003 737. WhatsApp +256 709 714 959. Email <span class="fill">[email address]</span>.</p>
+</div></section>
+</main>
+
+<footer><div class="soc" id="soc" aria-label="Follow BELIEVE Pharmacy"></div><div class="flinks"><a href="index.html#contact">Contact us</a> · <a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms</a></div>© 2026 BELIEVE Pharmacy, Gulu, Uganda. Information on this site does not replace a medical examination. Always read labels and follow professional advice.</footer>
+
+<dialog id="auth" aria-label="Account">
+  <div id="vAuth">
+    <h3 id="aTitle">Sign in</h3><p class="note" id="aMsg">Track your orders and check out faster.</p>
+    <form id="authF">
+      <label class="su">Full name<input name="name" autocomplete="name"></label>
+      <label class="su">Phone (WhatsApp)<input name="phone" type="tel" autocomplete="tel"></label>
+      <label>Email<input name="email" type="email" autocomplete="email" required></label>
+      <label>Password<input name="pw" type="password" minlength="6" autocomplete="current-password" required></label>
+      <p class="note suNote" hidden>By creating an account you agree to our <a href="terms.html" style="color:var(--p)">Terms</a> and <a href="privacy.html" style="color:var(--p)">Privacy Policy</a>.</p>
+      <div class="err" id="aErr" role="alert"></div>
+      <button class="btn" id="aGo" type="submit">Sign in</button>
+      <button class="link" type="button" id="aSwap">New here? Create an account</button>
+    </form>
+    <button class="link" type="button" data-close style="margin-top:14px">Close</button>
+  </div>
+  <div id="vAcc" hidden></div>
+</dialog>
+<a class="wa" href="https://wa.me/256709714959" target="_blank" rel="noopener" aria-label="Chat with BELIEVE Pharmacy on WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 00-8.6 15L2 22l5.1-1.4A10 10 0 1012 2zm5.2 14.2c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .6l-.4.6c-.2.2-.3.4-.1.7.7 1.1 1.6 2 2.7 2.600.3.1.5.1.7-.1l.8-1c.2-.3.4-.2.6-.1l2 .9c.3.1.5.2.6.3.1.1.1.6-.1 1.300z"/></svg>WhatsApp</a>
+<div id="veil"></div>
+<aside id="drawer" aria-label="Basket">
+  <header>Your basket <button class="btn ghost sm" id="closeCart">Close</button></header>
+  <div class="items" id="items"></div>
+  <footer>
+    <div class="tot"><span>Total</span><span id="total">UGX 0</span></div>
+    <select id="cDel" aria-label="Delivery"><option>Collect in store</option><option>Deliver in Gulu</option></select>
+    <input id="cAddr" placeholder="Delivery address (if delivering)" aria-label="Address">
+    <select id="cPay" aria-label="Payment"><option>Pay with MTN Mobile Money</option><option>Pay with Airtel Money</option><option>Pay on collection / delivery</option></select>
+    <button class="btn" id="place">Place order</button>
+    <div class="ok" id="oOk"></div>
+  </footer>
+</aside>
+<script src="app.js" defer></script>
+</body>
+</html>
