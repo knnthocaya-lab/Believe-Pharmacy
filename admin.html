@@ -119,7 +119,7 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // =======================================================
 const $=s=>document.querySelector(s),fmt=n=>"UGX "+Number(n).toLocaleString("en-US");
 const esc=t=>String(t??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const STEPS=["Received","Confirmed","Preparing","Ready or on the way","Completed"],RX=["received","verified","ready","rejected"];
+const STEPS=["Received","Confirmed","Preparing","Ready or on the way","Completed","Cancelled"],RX=["received","verified","ready","rejected"];
 const SB=(SUPABASE_URL&&SUPABASE_ANON_KEY&&window.supabase)?supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null;
 let me=null,editId=null,products=[];
 const show=id=>{["login","app"].forEach(x=>$("#"+x).hidden=x!==id)};
@@ -211,12 +211,20 @@ async function loadOrders(){
   if(error){$("#olist").innerHTML='<p class="msg e">Could not load orders.</p>';return}
   const ids=[...new Set(data.map(o=>o.user_id))],pr={};
   if(ids.length){const {data:ps}=await SB.from("profiles").select("id,name,phone").in("id",ids);(ps||[]).forEach(p=>pr[p.id]=p)}
-  $("#olist").innerHTML=data.length?data.map(o=>{const c=pr[o.user_id]||{};return `<div class="ord"><div class="h"><b>${esc(o.code)} · ${fmt(o.total)}</b><span class="note">${new Date(o.created_at).toLocaleString("en-GB")}</span></div>
+  $("#olist").innerHTML=data.length?data.map(o=>{const c=pr[o.user_id]||{};return `<div class="ord"><div class="h"><b>${esc(o.code)} · ${fmt(o.total)} · ${o.paid?"Paid":"Not paid"}</b><span class="note">${new Date(o.created_at).toLocaleString("en-GB")}</span></div>
    <div>${esc(c.name||"Customer")} · <a href="https://wa.me/${waNum(c.phone)}" target="_blank" rel="noopener">${esc(c.phone||"")}</a></div>
    <div class="note">${(o.items||[]).map(x=>x.q+" × "+esc(x.n)).join(", ")}</div>
    <div class="note">${esc(o.delivery||"")}${o.address?" · "+esc(o.address):""} · ${esc(o.payment||"")}</div>
-   <label>Status<select data-o="${o.id}">${STEPS.map((s,i)=>`<option value="${i}" ${i===o.status?"selected":""}>${s}</option>`).join("")}</select></label></div>`}).join(""):'<p class="note" style="margin-top:12px">No orders yet.</p>'}
-$("#olist").onchange=async e=>{const id=e.target.dataset.o;if(!id)return;const {error}=await SB.from("orders").update({status:parseInt(e.target.value,10)}).eq("id",id);if(error)alert("Could not update the status.");else refreshBadges()};
+   <label>Status<select data-o="${o.id}">${STEPS.map((s,i)=>`<option value="${i}" ${i===o.status?"selected":""}>${s}</option>`).join("")}</select></label>
+   <label style="display:flex;gap:8px;align-items:center;font-size:15px;color:var(--ink)"><input type="checkbox" data-op="${o.id}" ${o.paid?"checked":""} style="width:auto"> Payment received</label></div>`}).join(""):'<p class="note" style="margin-top:12px">No orders yet.</p>'}
+$("#olist").onchange=async e=>{
+  const t=e.target.dataset;
+  if(t.op){const {error}=await SB.from("orders").update({paid:e.target.checked}).eq("id",t.op);if(error){alert("Could not update the payment.");e.target.checked=!e.target.checked}else loadOrders();return}
+  const id=t.o;if(!id)return;const v=parseInt(e.target.value,10);
+  if(v===5&&!confirm("Cancel this order and put the items back in stock? This cannot be undone.")){loadOrders();return}
+  const {error}=await SB.from("orders").update({status:v}).eq("id",id);
+  if(error){alert(/CANCELLED_LOCKED/.test(error.message)?"A cancelled order cannot be reopened.":"Could not update the status.");loadOrders();return}
+  refreshBadges();if(v===5)loadProducts()};
 
 // ---------- Prescriptions ----------
 async function loadRx(){

@@ -16,12 +16,12 @@
 <body data-page="home">
 <div class="promo" id="promo" hidden><a id="promoT" href="deals.html"></a><span class="promo-c" id="promoC"></span><button id="promoX" aria-label="Dismiss this message">×</button></div>
 <nav><div class="wrap">
-  <a class="brand" href="index.html"><img alt="" src="favicon.svg">BELIEVE Pharmacy</a>
+  <a class="brand" href="index.html"><img alt="" src="favicon.svg"><span>BELIEVE Pharmacy</span></a>
   <div class="links" id="navLinks"><a class="l" href="shop.html">Shop</a><a class="l deal" href="deals.html">Deals</a><a class="l" href="prescriptions.html">Prescriptions</a><a class="l" href="consult.html">Consult</a><a class="l" href="careers.html">Careers</a><a class="l" href="#" id="trackL">Track order</a></div>
   <button class="cartbtn" id="acct">Sign in</button><button class="cartbtn" id="theme" aria-label="Switch between light and dark mode">☾</button>
   <a class="cartbtn" href="saved.html" id="favLink" aria-label="Saved products">♡ <b id="favCount" hidden>0</b></a>
   <button class="cartbtn" id="openCart" aria-label="Open basket">Basket <b id="count">0</b></button>
-  <button class="cartbtn menu" id="menuBtn" aria-label="Menu" aria-expanded="false" aria-controls="navLinks">Menu</button>
+  <button class="cartbtn menu" id="menuBtn" aria-label="Menu" aria-expanded="false" aria-controls="navLinks"><span aria-hidden="true">&#9776;</span><span class="sr">Menu</span></button>
 </div></nav>
 
 <main>
@@ -35,7 +35,18 @@
     <div class="facts"><span>Fast delivery</span><span>Two branches in Gulu</span><span>Order on WhatsApp</span></div>
   </div>
   <div class="wl-photo">
-    <img src="welcome.jpg" fetchpriority="high" decoding="async" alt="A smiling BELIEVE Pharmacy team member behind the counter with a baby care kit" width="640" height="761">
+    <div class="slider" id="slider" role="group" aria-roledescription="carousel" aria-label="Photos of the BELIEVE Pharmacy team">
+      <div class="track">
+        <figure class="slide" aria-roledescription="slide" aria-label="1 of 5"><img src="welcome.jpg" fetchpriority="high" decoding="async" alt="A smiling BELIEVE Pharmacy team member behind the counter with a baby care kit" width="640" height="761"><figcaption class="cap">Welcome to BELIEVE</figcaption></figure>
+        <figure class="slide" aria-roledescription="slide" aria-label="2 of 5"><img src="slide2.jpg" loading="lazy" decoding="async" alt="A smiling pharmacy team member in glasses at the counter. Caption: Happy to see you" width="640" height="761"></figure>
+        <figure class="slide" aria-roledescription="slide" aria-label="3 of 5"><img src="slide3.jpg" loading="lazy" decoding="async" alt="A smiling team member at the counter. Caption: Service with love" width="640" height="761"></figure>
+        <figure class="slide" aria-roledescription="slide" aria-label="4 of 5"><img src="slide4.jpg" loading="lazy" decoding="async" alt="A smiling team member in a BELIEVE Pharmacy shirt at the till. Caption: Best prices for you" width="640" height="761"></figure>
+        <figure class="slide" aria-roledescription="slide" aria-label="5 of 5"><img src="slide5.jpg" loading="lazy" decoding="async" alt="A pharmacist in a white coat checking a label. Caption: Right prescriptions" width="640" height="761"></figure>
+      </div>
+      <button class="snav prev" type="button" aria-label="Previous photo">&#8249;</button>
+      <button class="snav next" type="button" aria-label="Next photo">&#8250;</button>
+      <div class="sdots" role="group" aria-label="Choose a photo"></div>
+    </div>
     <div class="chip2 a">Fast delivery<small>Right to your door</small></div>
     <div class="chip2 b">Two branches<small>Olya Rd · Acholi Rd</small></div>
   </div>
@@ -77,8 +88,6 @@
 <section class="alt" id="contact"><div class="wrap">
   <h2>Visit us.</h2><p class="sub">Two branches in Gulu. Call, message us on WhatsApp or come in.</p>
   <div class="ctc" id="branches"></div>
-  <h3 class="follow">Follow us</h3>
-  <div class="soc" id="soc2" aria-label="Follow BELIEVE Pharmacy"></div>
 </div></section>
 </main>
 

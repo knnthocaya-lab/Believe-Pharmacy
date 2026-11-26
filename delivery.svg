@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  
+  <rect x="2" y="2" width="96" height="96" rx="12" fill="#F2FBF4" stroke="#28A745" stroke-width="3" />
+
+  
+  <path d="M9 36 H23 M6 47 H19 M11 58 H21" stroke="#28A745" stroke-width="3.5" stroke-linecap="round" />
+
+  
+  
+  <path d="M21 75 C23 56 33 48 47 48 C57 48 63 54 65 67 L53 78 L25 78 Z" fill="#1F2937" />
+  
+  <path d="M26 61 L57 61" stroke="#28A745" stroke-width="3.5" />
+
+  
+  <rect x="39" y="37" width="9" height="12" rx="4" fill="#5C3A21" />
+  <circle cx="44" cy="30" r="10.5" fill="#5C3A21" />
+
+  
+  <path d="M34 30 C34 38 39 41 46 40.5 C50 40 53 37 54 33 C51 35 46 35 43 34 C40 33 37 32 34 30 Z" fill="#18181B" />
+  <path d="M33.5 28 C33.5 21 39 18 46 19 C51 19.5 54 23 54.5 27 Z" fill="#18181B" />
+
+  
+  <path d="M33 26 C33 19 39 16 46 16 C52 16 55 20 55 25 Z" fill="#28A745" />
+  <path d="M45 24.5 L61 26.5 C62.5 26.7 62.5 28.5 60.5 28.5 L44 27.5 Z" fill="#1E7E34" />
+
+  
+  <circle cx="49.5" cy="28.5" r="1.3" fill="#18181B" />
+  <path d="M47 33.5 Q50 35.5 52.5 33.5" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" />
+
+  
+  <rect x="53" y="44" width="35" height="30" rx="4" fill="#FFFFFF" stroke="#28A745" stroke-width="2.5" />
+
+  
+  <g transform="translate(56.5, 46.5) scale(0.28)">
+    
+    <path d="M50 82 C25 65 12 48 12 32 C12 20 21 12 32 12 C40 12 46 16 50 22 C54 16 60 12 68 12 C79 12 88 20 88 32 C88 48 75 65 50 82 Z" fill="none" stroke="#28A745" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
+    <polyline points="24,42 36,42 42,32 50,52 58,36 64,42 76,42" fill="none" stroke="#28A745" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round" />
+    
+    <circle cx="78" cy="20" r="15" fill="#FFFFFF" stroke="#28A745" stroke-width="6.5" />
+    <path d="M78 13 V27 M71 20 H85" stroke="#28A745" stroke-width="6.5" stroke-linecap="round" />
+  </g>
+
+  
+  <path d="M35 56 Q43 66 55 64" fill="none" stroke="#1F2937" stroke-width="7" stroke-linecap="round" />
+  <circle cx="56" cy="64" r="4" fill="#5C3A21" />
+
+  
+  <path d="M16 84 H84" stroke="#28A745" stroke-width="3.5" stroke-linecap="round" />
+</svg>

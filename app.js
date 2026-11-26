@@ -3,8 +3,8 @@
 const WHATSAPP = "256709714959"; // pharmacy WhatsApp number, no + or spaces
 // ===== BRANCH DETAILS: edit the text inside the quotes =====
 const BRANCHES = [
-  { name: "Olya Road",   address: "Plot 26, Olya Road, Pece-Laroo, Gulu City East",   phones: ["0393001498", "0709714959"], hours: "Mon–Sat 8:00–20:00", map: "", embed: "" },
-  { name: "Acholi Road", address: "Plot 5, Acholi Road, Bus Park, Gulu", phones: ["0393003737"],               hours: "Mon–Sat 8:00–20:00", map: "", embed: "" }
+  { name: "Olya Road",   address: "Plot 26, Olya Road, Pece-Laroo, Gulu City East",   phones: ["0393001498"], hours: "Mon–Sat 8:00–20:00", map: "https://www.google.com/maps/dir/?api=1&destination=2.770177,32.301311", embed: "https://maps.google.com/maps?q=2.770177,32.301311&z=17&output=embed" },
+  { name: "Acholi Road", address: "Plot 5, Acholi Road, Bus Park, Gulu", phones: ["0393003737"],               hours: "Mon–Sat 8:00–20:00", map: "https://www.google.com/maps/dir/?api=1&destination=2.7695191,32.2992171", embed: "https://maps.google.com/maps?q=2.7695191,32.2992171&z=17&output=embed" }
 ]; // hours: leave "" to hide it.
 // MAPS: by default each map is found from the address. For an exact pin, open the branch on Google Maps, click Share > Embed a map, copy the link inside src="..." into embed, and paste the normal share link into map.
 const EMAIL = "";
@@ -119,18 +119,23 @@ $("#place").onclick=async()=>{
   if(!ids.length){alert("Your basket is empty.");return}
   const del=$("#cDel").value,addr=$("#cAddr").value.trim(),pay=$("#cPay").value;
   if(del.startsWith("Deliver")&&!addr){alert("Enter your delivery address.");return}
-  const items=ids.map(i=>({n:prod(i).n,q:cart[i],p:prod(i).p})),total=items.reduce((t,x)=>t+x.p*x.q,0);
+  const items=ids.map(i=>({id:prod(i).id,n:prod(i).n,q:cart[i],p:prod(i).p})),total=items.reduce((t,x)=>t+x.p*x.q,0);
   const lines=items.map(x=>`• ${x.q} × ${x.n} — ${fmt(x.p*x.q)}`).join("\n");
   if(!SB){wa(`New order, BELIEVE Pharmacy\n${lines}\nTotal: ${fmt(total)}\n${del}${addr?": "+addr:""}\n${pay}`);cart={};sync();closeC();return}
   if(!cur){closeC();showAuth("up","Create an account or sign in to place and track your order.");return}
   const btn=$("#place");btn.disabled=true;
-  const code="BP-"+Math.floor(10000+Math.random()*90000);
-  const {error}=await SB.from("orders").insert({code,user_id:cur.id,items,total,delivery:del,address:addr,payment:pay});
+  // the server re-checks prices, stock and the total, and gives the order its number
+  const {data:ord,error}=await SB.from("orders").insert({code:"pending",user_id:cur.id,items:items.map(x=>({id:x.id,q:x.q,n:x.n})),total,delivery:del,address:addr,payment:pay}).select("code,total,items").single();
   btn.disabled=false;
-  if(error){alert("We could not place your order. Please try again, or order on WhatsApp.");return}
-  const msg=`New order ${code}, BELIEVE Pharmacy\n${lines}\nTotal: ${fmt(total)}\nName: ${cur.name}\nPhone: ${cur.phone}\n${del}${addr?": "+addr:""}\n${pay}`;
-  flash=`<div class="ok" style="display:block;margin-top:12px">Order ${code} placed. <a href="${waUrl(msg)}" target="_blank" rel="noopener"><b>Also tell us on WhatsApp</b></a></div>`;
-  cart={};sync();closeC();showAuth();
+  if(error){
+    const m=error.message||"",s=m.match(/STOCK:(.+):(\d+)/);
+    if(s){alert(`Sorry, ${s[1]} only has ${s[2]} left. Please lower the quantity and try again.`);refreshProducts();return}
+    if(m.includes("ITEM_UNAVAILABLE")){alert("One of the items in your basket is no longer available. Please remove it and try again.");refreshProducts();return}
+    alert("We could not place your order. Please try again, or order on WhatsApp.");return}
+  const L=ord.items.map(x=>`• ${x.q} × ${x.n} — ${fmt(x.p*x.q)}`).join("\n");
+  const msg=`New order ${ord.code}, BELIEVE Pharmacy\n${L}\nTotal: ${fmt(ord.total)}\nName: ${cur.name}\nPhone: ${cur.phone}\n${del}${addr?": "+addr:""}\n${pay}`;
+  flash=`<div class="ok" style="display:block;margin-top:12px">Order ${ord.code} placed. Total ${fmt(ord.total)}. <a href="${waUrl(msg)}" target="_blank" rel="noopener"><b>Also tell us on WhatsApp</b></a></div>`;
+  cart={};sync();closeC();refreshProducts();showAuth();
 };
 $("#rxForm").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target),o=$("#rxOk"),file=$("#rxFile").files[0];o.style.display="block";
   if(!SB){wa(`Prescription request, BELIEVE Pharmacy\nName: ${f.get("name")}\nPhone: ${f.get("phone")}\n${f.get("delivery")}\nNotes: ${f.get("notes")||"-"}\n(I will attach the prescription file in this chat.)`);o.textContent="WhatsApp opened. Attach your prescription photo in the chat and send it.";return}
@@ -175,9 +180,8 @@ async function showAuth(m,msg){
 async function renderAcc(){
   $("#vAcc").innerHTML='<p class="note">Loading…</p>';
   const {data:os,error}=await SB.from("orders").select("*").eq("user_id",cur.id).order("created_at",{ascending:false});
-  const list=error?'<p class="err">Could not load your orders. Please try again.</p>':os.length?os.map(o=>`<div class="ord"><div class="h"><b>${esc(o.code)}</b><span>${fmt(o.total)}</span></div><small>${new Date(o.created_at).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})} · ${esc(o.delivery||"")}${o.address?" · "+esc(o.address):""}</small>
-  <div class="steps" aria-hidden="true">${STEPS.map((x,i)=>`<i class="${i<=o.status?"on":""}"></i>`).join("")}</div>
-  <div class="stat">${STEPS[o.status]||""}</div><small>${(o.items||[]).map(x=>x.q+" × "+esc(x.n)).join(", ")}</small></div>`).join(""):'<p class="note" style="margin-top:8px">No orders yet. Add a product to your basket to place your first order.</p>';
+  const list=error?'<p class="err">Could not load your orders. Please try again.</p>':os.length?os.map(o=>`<div class="ord"><div class="h"><b>${esc(o.code)}</b><span>${fmt(o.total)}${o.paid?" · Paid":""}</span></div><small>${new Date(o.created_at).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})} · ${esc(o.delivery||"")}${o.address?" · "+esc(o.address):""}</small>
+  ${o.status===5?'<div class="stat" style="color:#d92d20;margin-top:10px">Cancelled</div>':`<div class="steps" aria-hidden="true">${STEPS.map((x,i)=>`<i class="${i<=o.status?"on":""}"></i>`).join("")}</div><div class="stat">${STEPS[o.status]||""}</div>`}<small>${(o.items||[]).map(x=>x.q+" × "+esc(x.n)).join(", ")}</small></div>`).join(""):'<p class="note" style="margin-top:8px">No orders yet. Add a product to your basket to place your first order.</p>';
   $("#vAcc").innerHTML=`<h3>Your account</h3><p class="note">${esc(cur.name)} · ${esc(cur.phone)} · ${esc(cur.email)}</p>${flash}${cur.admin?'<p style="margin-top:12px"><a class="btn sm" href="admin.html">Open admin dashboard</a></p>':""}<h4 style="margin-top:18px">Your orders</h4>${list}<div style="display:flex;gap:16px;margin-top:20px"><button class="btn sm" data-close>Close</button><button class="link" id="out">Sign out</button></div>`;
   flash=""}
 $("#auth").addEventListener("click",async e=>{
@@ -197,6 +201,10 @@ function applyProducts(rows){
   P=rows.map(x=>{const on=x.sale_price!=null&&x.sale_price<x.price&&(!x.sale_ends||new Date(x.sale_ends)>new Date());return {was:on?x.price:null,pct:on?Math.round((1-x.sale_price/x.price)*100):0,id:x.id,d:x.description,n:x.name,c:x.category,p:on?x.sale_price:x.price,img:x.image_url,thumb:x.thumb_url,stock:x.stock}});
   gridVer++;prodsTried=true;buildChips();draw();prodsReady=true;fav=fav.filter(i=>prod(i));saveFav();
   sync();renderProductPage();renderSaved();renderDeals();renderDealsTile();paintHearts()}
+async function refreshProducts(){
+  if(!SB)return;
+  const {data,error}=await SB.from("products").select("*").eq("active",true).order("category").order("name");
+  if(!error&&data&&data.length){try{localStorage.setItem("believe-products",JSON.stringify(data))}catch(e){}applyProducts(data)}}
 async function init(){
   if(!SB){prodsReady=true;sync();renderProductPage();renderSaved();renderDeals();renderDealsTile();paintHearts();return}
   SB.auth.onAuthStateChange(ev=>{if(ev==="SIGNED_OUT"){cur=null;navUser()}});
@@ -282,14 +290,14 @@ function renderBranches(){
   const ph=n=>`<a href="tel:+256${n.slice(1)}">${n.replace(/(\d{4})(\d{3})(\d{3})/,"$1 $2 $3")}</a>`;
   const gq=b=>encodeURIComponent(b.address+", Gulu, Uganda");
   $("#branches").innerHTML=BRANCHES.map(b=>`<div><h4>${esc(b.name)}</h4><p>${esc(b.address)}<br>${b.phones.map(ph).join(" · ")}${b.hours?"<br>"+esc(b.hours):""}<br><a href="${esc(b.map||"https://www.google.com/maps/search/?api=1&query="+gq(b))}" target="_blank" rel="noopener">Get directions</a></p><iframe title="Map showing the ${esc(b.name)} branch" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="${esc(b.embed||"https://maps.google.com/maps?q="+gq(b)+"&output=embed")}"></iframe></div>`).join("")+
-  `<div><h4>Fast delivery</h4><p>Order on WhatsApp<br><a href="https://wa.me/${WHATSAPP}" target="_blank" rel="noopener">+${WHATSAPP.replace(/(\d{3})(\d{3})(\d{3})(\d{3})/,"$1 $2 $3 $4")}</a>${EMAIL?`<br><a href="mailto:${esc(EMAIL)}">${esc(EMAIL)}</a>`:""}</p></div>`}
+  `<div><img class="dicon" src="delivery.svg" alt="" width="64" height="64"><h4>Fast delivery</h4><p>Delivery and WhatsApp orders<br><a href="https://wa.me/${WHATSAPP}" target="_blank" rel="noopener">+${WHATSAPP.replace(/(\d{3})(\d{3})(\d{3})(\d{3})/,"$1 $2 $3 $4")}</a>${EMAIL?`<br><a href="mailto:${esc(EMAIL)}">${esc(EMAIL)}</a>`:""}</p></div>`}
 function renderSocials(){
   const I={
    instagram:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>',
    facebook:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14 8V6.500c0-.700.200-1 1.100-1H17V2h-2.600C11.500 2 10 3.600 10 6v2H7.500v3.500H10V22h4V11.500h2.700L17 8z"/></svg>',
    tiktok:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.600 5.800A4.300 4.300 0 0 1 15.500 3h-3.100v12.400a2.600 2.600 0 1 1-2.600-2.600c.3 0 .5 0 .8.100V9.700a5.700 5.700 0 1 0 4.900 5.700V9a7.400 7.400 0 0 0 4.300 1.400V7.300a4.300 4.300 0 0 1-3.200-1.500z"/></svg>'};
   const L={instagram:"Instagram",facebook:"Facebook",tiktok:"TikTok"};
-  const socHTML=Object.keys(I).filter(k=>SOCIALS[k]).map(k=>`<a href="${esc(SOCIALS[k])}" target="_blank" rel="noopener" aria-label="BELIEVE Pharmacy on ${L[k]}">${I[k]}</a>`).join("");$("#soc").innerHTML=socHTML;$("#soc2").innerHTML=socHTML;
+  const socHTML=Object.keys(I).filter(k=>SOCIALS[k]).map(k=>`<a href="${esc(SOCIALS[k])}" target="_blank" rel="noopener" aria-label="BELIEVE Pharmacy on ${L[k]}">${I[k]}</a>`).join("");$("#soc").innerHTML=socHTML;
 }
 renderSocials();
 renderBranches();
@@ -305,3 +313,32 @@ init();
   if(!mb||!nl)return;
   mb.onclick=()=>{const o=nl.classList.toggle("open");mb.setAttribute("aria-expanded",o)};
   nl.onclick=e=>{if(e.target.closest("a"))nl.classList.remove("open")}})();
+
+// ===== Home photo slider =====
+(function(){
+  const s=document.getElementById("slider");if(!s)return;
+  const track=s.querySelector(".track"),slides=[...s.querySelectorAll(".slide")],dotsEl=s.querySelector(".sdots");
+  const reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let i=0,timer=null,paused=false;
+  slides.forEach((_,n)=>{const b=document.createElement("button");b.type="button";b.setAttribute("aria-label","Show photo "+(n+1));b.onclick=()=>{go(n);restart()};dotsEl.appendChild(b)});
+  function go(n){i=(n+slides.length)%slides.length;track.style.transform="translateX(-"+i*100+"%)";
+    [...dotsEl.children].forEach((b,k)=>b.setAttribute("aria-current",k===i));
+    slides.forEach((sl,k)=>sl.setAttribute("aria-hidden",k!==i))}
+  function play(){if(reduce||timer||paused||document.hidden)return;timer=setInterval(()=>go(i+1),4500)}
+  function stop(){clearInterval(timer);timer=null}
+  function restart(){stop();play()}
+  s.addEventListener("mouseenter",()=>{paused=true;stop()});
+  s.addEventListener("mouseleave",()=>{paused=false;play()});
+  s.addEventListener("focusin",()=>{paused=true;stop()});
+  s.addEventListener("focusout",()=>{paused=false;play()});
+  s.querySelector(".prev").onclick=()=>{go(i-1);restart()};
+  s.querySelector(".next").onclick=()=>{go(i+1);restart()};
+  s.addEventListener("keydown",e=>{if(e.key==="ArrowLeft"){go(i-1);restart()}else if(e.key==="ArrowRight"){go(i+1);restart()}});
+  let x0=null;
+  s.addEventListener("pointerdown",e=>{x0=e.clientX});
+  s.addEventListener("pointerup",e=>{if(x0==null)return;const dx=e.clientX-x0;x0=null;if(Math.abs(dx)>40){go(i+(dx<0?1:-1));restart()}});
+  s.addEventListener("pointercancel",()=>{x0=null});
+  document.addEventListener("visibilitychange",()=>{document.hidden?stop():play()});
+  window.addEventListener("load",()=>{slides.forEach(sl=>{const im=sl.querySelector("img");if(im)im.loading="eager"})});
+  go(0);play();
+})();
