@@ -54,7 +54,7 @@
 
 <h2>Who can see it</h2>
 <p>Only our authorised pharmacy staff can open prescriptions, orders, pharmacist questions and CVs. Delivery staff see only what they need to deliver (name, phone and address). We never sell your information.</p>
-<p>We use these service providers to run the site: Supabase (database, sign-in and private file storage), Vercel (website hosting), Google (Google Maps opens when you tap Get directions), WhatsApp (messages you choose to send us) and jsDelivr (delivery of site code). They process information for us or, in the case of WhatsApp and Google, under their own terms. We may also share information when the law requires it.</p>
+<p>We use these service providers to run the site: Supabase (database, sign-in and private file storage), Vercel (website hosting), Google (Google Maps opens when you tap Get directions), WhatsApp (messages you choose to send us), Resend (emails that tell our staff a new order or prescription has arrived) and jsDelivr (delivery of site code). They process information for us or, in the case of WhatsApp and Google, under their own terms. We may also share information when the law requires it.</p>
 
 <h2>Where it is stored</h2>
 <p>Our database and files are stored on servers in London, United Kingdom, which is outside Uganda. <span class="fill">[adviser to confirm this meets Uganda's rules on sending data abroad]</span></p>
@@ -107,7 +107,8 @@
   <footer>
     <div class="tot"><span>Total</span><span id="total">UGX 0</span></div>
     <select id="cDel" aria-label="Delivery"><option>Collect in store</option><option>Deliver in Gulu</option></select>
-    <input id="cAddr" placeholder="Delivery address (if delivering)" aria-label="Address">
+    <select id="cBranch" aria-label="Branch to collect from"></select>
+    <input id="cAddr" placeholder="Delivery address" aria-label="Delivery address" hidden>
     <select id="cPay" aria-label="Payment"><option>Pay with MTN Mobile Money</option><option>Pay with Airtel Money</option><option>Pay on collection / delivery</option></select>
     <button class="btn" id="place">Place order</button>
     <div class="ok" id="oOk"></div>

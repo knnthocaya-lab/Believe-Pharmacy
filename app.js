@@ -117,15 +117,15 @@ function wa(text){window.open("https://wa.me/"+WHATSAPP+"?text="+encodeURICompon
 $("#place").onclick=async()=>{
   const ids=Object.keys(cart);
   if(!ids.length){alert("Your basket is empty.");return}
-  const del=$("#cDel").value,addr=$("#cAddr").value.trim(),pay=$("#cPay").value;
+  const del=$("#cDel").value,deliver=del.startsWith("Deliver"),addr=deliver?$("#cAddr").value.trim():"",pay=$("#cPay").value,branch=deliver?null:$("#cBranch").value;
   if(del.startsWith("Deliver")&&!addr){alert("Enter your delivery address.");return}
   const items=ids.map(i=>({id:prod(i).id,n:prod(i).n,q:cart[i],p:prod(i).p})),total=items.reduce((t,x)=>t+x.p*x.q,0);
   const lines=items.map(x=>`• ${x.q} × ${x.n} — ${fmt(x.p*x.q)}`).join("\n");
-  if(!SB){wa(`New order, BELIEVE Pharmacy\n${lines}\nTotal: ${fmt(total)}\n${del}${addr?": "+addr:""}\n${pay}`);cart={};sync();closeC();return}
+  if(!SB){wa(`New order, BELIEVE Pharmacy\n${lines}\nTotal: ${fmt(total)}\n${del}${addr?": "+addr:""}${branch?" ("+branch+")":""}\n${pay}`);cart={};sync();closeC();return}
   if(!cur){closeC();showAuth("up","Create an account or sign in to place and track your order.");return}
   const btn=$("#place");btn.disabled=true;
   // the server re-checks prices, stock and the total, and gives the order its number
-  const {data:ord,error}=await SB.from("orders").insert({code:"pending",user_id:cur.id,items:items.map(x=>({id:x.id,q:x.q,n:x.n})),total,delivery:del,address:addr,payment:pay}).select("code,total,items").single();
+  const {data:ord,error}=await SB.from("orders").insert({code:"pending",user_id:cur.id,items:items.map(x=>({id:x.id,q:x.q,n:x.n})),total,delivery:del,address:addr,payment:pay,branch}).select("code,total,items").single();
   btn.disabled=false;
   if(error){
     const m=error.message||"",s=m.match(/STOCK:(.+):(\d+)/);
@@ -133,7 +133,7 @@ $("#place").onclick=async()=>{
     if(m.includes("ITEM_UNAVAILABLE")){alert("One of the items in your basket is no longer available. Please remove it and try again.");refreshProducts();return}
     alert("We could not place your order. Please try again, or order on WhatsApp.");return}
   const L=ord.items.map(x=>`• ${x.q} × ${x.n} — ${fmt(x.p*x.q)}`).join("\n");
-  const msg=`New order ${ord.code}, BELIEVE Pharmacy\n${L}\nTotal: ${fmt(ord.total)}\nName: ${cur.name}\nPhone: ${cur.phone}\n${del}${addr?": "+addr:""}\n${pay}`;
+  const msg=`New order ${ord.code}, BELIEVE Pharmacy\n${L}\nTotal: ${fmt(ord.total)}\nName: ${cur.name}\nPhone: ${cur.phone}\n${del}${addr?": "+addr:""}${branch?" ("+branch+")":""}\n${pay}`;
   flash=`<div class="ok" style="display:block;margin-top:12px">Order ${ord.code} placed. Total ${fmt(ord.total)}. <a href="${waUrl(msg)}" target="_blank" rel="noopener"><b>Also tell us on WhatsApp</b></a></div>`;
   cart={};sync();closeC();refreshProducts();showAuth();
 };
@@ -184,7 +184,7 @@ const cancelHTML=o=>{
 async function renderAcc(){
   $("#vAcc").innerHTML='<p class="note">Loading…</p>';
   const {data:os,error}=await SB.from("orders").select("*").eq("user_id",cur.id).order("created_at",{ascending:false});
-  const list=error?'<p class="err">Could not load your orders. Please try again.</p>':os.length?os.map(o=>`<div class="ord"><div class="h"><b>${esc(o.code)}</b><span>${fmt(o.total)}${o.paid?" · Paid":""}</span></div><small>${new Date(o.created_at).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})} · ${esc(o.delivery||"")}${o.address?" · "+esc(o.address):""}</small>
+  const list=error?'<p class="err">Could not load your orders. Please try again.</p>':os.length?os.map(o=>`<div class="ord"><div class="h"><b>${esc(o.code)}</b><span>${fmt(o.total)}${o.paid?" · Paid":""}</span></div><small>${new Date(o.created_at).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})} · ${esc(o.delivery||"")}${o.address?" · "+esc(o.address):""}${o.branch?" · "+esc(o.branch):""}</small>
   ${o.status===5?'<div class="stat" style="color:#d92d20;margin-top:10px">Cancelled</div>':`<div class="steps" aria-hidden="true">${STEPS.map((x,i)=>`<i class="${i<=o.status?"on":""}"></i>`).join("")}</div><div class="stat">${STEPS[o.status]||""}</div>`}<small>${(o.items||[]).map(x=>x.q+" × "+esc(x.n)).join(", ")}</small>${cancelHTML(o)}</div>`).join(""):'<p class="note" style="margin-top:8px">No orders yet. Add a product to your basket to place your first order.</p>';
   $("#vAcc").innerHTML=`<h3>Your account</h3><p class="note">${esc(cur.name)} · ${esc(cur.phone)} · ${esc(cur.email)}</p>${flash}${cur.admin?'<p style="margin-top:12px"><a class="btn sm" href="admin.html">Open admin dashboard</a></p>':""}<h4 style="margin-top:18px">Your orders</h4>${list}<div style="display:flex;gap:16px;margin-top:20px"><button class="btn sm" data-close>Close</button><button class="link" id="out">Sign out</button></div>`;
   flash=""}
@@ -313,6 +313,9 @@ renderSocials();
 renderBranches();
 buildChips();
 draw();sync();
+function syncDelivery(){const d=$("#cDel").value.startsWith("Deliver");$("#cAddr").hidden=!d;$("#cBranch").hidden=d}
+$("#cBranch").innerHTML=BRANCHES.map(b=>`<option>${esc(b.name)}</option>`).join("");
+$("#cDel").onchange=syncDelivery;syncDelivery();
 renderJobs();
 paintHearts();
 if(SB){["#dealsGrid","#savedGrid"].forEach(s=>{if(document.querySelector(s))$(s).innerHTML=SKEL})}

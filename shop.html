@@ -62,7 +62,8 @@
   <footer>
     <div class="tot"><span>Total</span><span id="total">UGX 0</span></div>
     <select id="cDel" aria-label="Delivery"><option>Collect in store</option><option>Deliver in Gulu</option></select>
-    <input id="cAddr" placeholder="Delivery address (if delivering)" aria-label="Address">
+    <select id="cBranch" aria-label="Branch to collect from"></select>
+    <input id="cAddr" placeholder="Delivery address" aria-label="Delivery address" hidden>
     <select id="cPay" aria-label="Payment"><option>Pay with MTN Mobile Money</option><option>Pay with Airtel Money</option><option>Pay on collection / delivery</option></select>
     <button class="btn" id="place">Place order</button>
     <div class="ok" id="oOk"></div>

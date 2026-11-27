@@ -76,6 +76,11 @@ input,select,textarea{border:1px solid var(--f2);border-radius:12px;padding:10px
         <div class="msg" id="pm" role="status"></div>
       </form>
     </div>
+    <div class="panel" id="lowPanel" hidden><h1 style="font-size:22px">Running low</h1><p class="note">5 or fewer left. Click a name to edit it and update the stock.</p><div id="lowList" style="margin-top:10px"></div></div>
+    <div class="panel"><h1 style="font-size:22px">Import or export products</h1>
+      <p class="note">Add or update many products at once from a spreadsheet saved as CSV. Products are matched by name, and the category must already exist. Photos are added afterwards with Edit. Do not include prescription-only medicines.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center"><button class="btn sm g" id="csvTpl" type="button">Download template</button><button class="btn sm g" id="csvOut" type="button">Download current products</button><label class="btn sm" style="cursor:pointer;display:inline-block;font-size:14px;color:#fff">Choose CSV file<input id="csvIn" type="file" accept=".csv,text/csv" hidden></label></div>
+      <div id="csvPrev" style="margin-top:14px"></div></div>
     <div class="panel"><h1 style="font-size:22px">Categories</h1><p class="note">Categories become the filter buttons on the shop. Pick one for each product above. Do not create categories for prescription-only medicines.</p>
       <div id="catList" style="margin-top:12px"></div>
       <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap"><input id="catNew" placeholder="New category, e.g. Baby care" maxlength="40" style="max-width:280px"><button class="btn sm" id="catAdd" type="button">Add category</button></div>
@@ -169,6 +174,10 @@ async function loadProducts(){
   const {data,error}=await SB.from("products").select("*").order("category").order("name");
   if(error){$("#plist").innerHTML='<p class="msg e">Could not load products.</p>';return}
   products=data;
+  const low=data.filter(p=>p.active&&p.stock<=5).sort((a,b)=>a.stock-b.stock);
+  $("#lowPanel").hidden=!low.length;
+  $("#lowList").innerHTML=low.map(p=>`<button type="button" class="cchip" data-e="${p.id}" style="cursor:pointer;background:var(--w)">${esc(p.name)} · <b style="color:${p.stock===0?"#d92d20":"inherit"}">${p.stock===0?"out of stock":p.stock+" left"}</b></button>`).join("");
+  const pt=document.querySelector('#tabs [data-t="products"]');if(pt)pt.innerHTML="Products"+(low.length?` <span class="nb">${low.length}</span>`:"");
   $("#plist").innerHTML=data.length?data.map(p=>`<div class="row ${p.active?"":"off"}">${p.image_url?`<img src="${esc(p.thumb_url||p.image_url)}" alt="" loading="lazy">`:`<div class="ph" title="No photo">–</div>`}
    <div><b>${esc(p.name)}</b><div class="note">${esc(p.category)} · ${p.sale_price!=null?`<s>${fmt(p.price)}</s> ${fmt(p.sale_price)} (sale)`:fmt(p.price)} · stock ${p.stock}${p.active?"":" · hidden"}</div></div>
    <div class="acts"><button class="btn sm g" data-e="${p.id}">Edit</button><button class="btn sm g" data-v="${p.id}">${p.active?"Hide":"Show"}</button><button class="btn sm d" data-d="${p.id}">Delete</button></div></div>`).join(""):'<p class="note" style="margin-top:12px">No products yet. Add your first one above.</p>'}
@@ -206,6 +215,17 @@ $("#pf").onsubmit=async e=>{e.preventDefault();const f=e.target,m=$("#pm"),btn=$
 
 // ---------- Orders ----------
 const waNum=p=>{let d=String(p||"").replace(/\D/g,"");if(d.startsWith("0"))d="256"+d.slice(1);return d};
+const first=n=>String(n||"").trim().split(" ")[0]||"there";
+function orderMsg(o,c){
+  const hi=`Hello ${first(c.name)}, `,tail=" Thank you for choosing BELIEVE Pharmacy.";
+  const where=o.address?o.address:(o.branch?o.branch+" branch":"our pharmacy");
+  const t={0:`we have received your order ${o.code} (${fmt(o.total)}).`,1:`your order ${o.code} is confirmed.`,2:`your order ${o.code} is being prepared.`,
+    3:o.address?`your order ${o.code} is on its way to ${where}.`:`your order ${o.code} is ready for collection at ${where}.`,
+    4:`your order ${o.code} is complete.`,5:`your order ${o.code} has been cancelled.`}[o.status];
+  return hi+t+(o.paid||o.status===0||o.status>=4?"":" Total "+fmt(o.total)+".")+tail}
+function rxMsg(r){
+  const hi=`Hello ${first(r.name)}, `,tail=" BELIEVE Pharmacy.";
+  return hi+({received:`we have received your prescription RX-${r.id} and our pharmacist will check it shortly.`,verified:`your prescription RX-${r.id} has been checked. We will confirm availability and the price.`,ready:`your prescription RX-${r.id} is ready for collection or delivery.`,rejected:`we could not accept prescription RX-${r.id}. Please call us so we can help.`}[r.status]||`about your prescription RX-${r.id}.`)+tail}
 async function loadOrders(){
   const {data,error}=await SB.from("orders").select("*").order("created_at",{ascending:false}).limit(100);
   if(error){$("#olist").innerHTML='<p class="msg e">Could not load orders.</p>';return}
@@ -214,9 +234,10 @@ async function loadOrders(){
   $("#olist").innerHTML=data.length?data.map(o=>{const c=pr[o.user_id]||{};return `<div class="ord"><div class="h"><b>${esc(o.code)} · ${fmt(o.total)} · ${o.paid?"Paid":"Not paid"}</b><span class="note">${new Date(o.created_at).toLocaleString("en-GB")}</span></div>
    <div>${esc(c.name||"Customer")} · <a href="https://wa.me/${waNum(c.phone)}" target="_blank" rel="noopener">${esc(c.phone||"")}</a></div>
    <div class="note">${(o.items||[]).map(x=>x.q+" × "+esc(x.n)).join(", ")}</div>
-   <div class="note">${esc(o.delivery||"")}${o.address?" · "+esc(o.address):""} · ${esc(o.payment||"")}</div>
+   <div class="note">${esc(o.delivery||"")}${o.branch?" · "+esc(o.branch):""}${o.address?" · "+esc(o.address):""} · ${esc(o.payment||"")}</div>
    <label>Status<select data-o="${o.id}">${STEPS.map((s,i)=>`<option value="${i}" ${i===o.status?"selected":""}>${s}</option>`).join("")}</select></label>
-   <label style="display:flex;gap:8px;align-items:center;font-size:15px;color:var(--ink)"><input type="checkbox" data-op="${o.id}" ${o.paid?"checked":""} style="width:auto"> Payment received</label></div>`}).join(""):'<p class="note" style="margin-top:12px">No orders yet.</p>'}
+   <label style="display:flex;gap:8px;align-items:center;font-size:15px;color:var(--ink)"><input type="checkbox" data-op="${o.id}" ${o.paid?"checked":""} style="width:auto"> Payment received</label>
+   <div><a class="btn sm g" href="https://wa.me/${waNum(c.phone)}?text=${encodeURIComponent(orderMsg(o,c))}" target="_blank" rel="noopener">Message customer</a></div></div>`}).join(""):'<p class="note" style="margin-top:12px">No orders yet.</p>'}
 $("#olist").onchange=async e=>{
   const t=e.target.dataset;
   if(t.op){const {error}=await SB.from("orders").update({paid:e.target.checked}).eq("id",t.op);if(error){alert("Could not update the payment.");e.target.checked=!e.target.checked}else loadOrders();return}
@@ -224,7 +245,7 @@ $("#olist").onchange=async e=>{
   if(v===5&&!confirm("Cancel this order and put the items back in stock? This cannot be undone.")){loadOrders();return}
   const {error}=await SB.from("orders").update({status:v}).eq("id",id);
   if(error){alert(/CANCELLED_LOCKED/.test(error.message)?"A cancelled order cannot be reopened.":"Could not update the status.");loadOrders();return}
-  refreshBadges();if(v===5)loadProducts()};
+  refreshBadges();loadOrders();if(v===5)loadProducts()};
 
 // ---------- Prescriptions ----------
 async function loadRx(){
@@ -233,10 +254,10 @@ async function loadRx(){
   $("#rlist").innerHTML=data.length?data.map(r=>`<div class="ord"><div class="h"><b>RX-${r.id} · ${esc(r.name||"")}</b><span class="note">${new Date(r.created_at).toLocaleString("en-GB")}</span></div>
    <div><a href="https://wa.me/${waNum(r.phone)}" target="_blank" rel="noopener">${esc(r.phone||"")}</a> · ${esc(r.delivery||"")}</div>
    ${r.notes?`<div class="note">${esc(r.notes)}</div>`:""}
-   <div style="display:flex;gap:12px;align-items:end;flex-wrap:wrap"><button class="btn sm" data-f="${esc(r.file_path)}">View prescription</button>
+   <div style="display:flex;gap:12px;align-items:end;flex-wrap:wrap"><button class="btn sm" data-f="${esc(r.file_path)}">View prescription</button><a class="btn sm g" href="https://wa.me/${waNum(r.phone)}?text=${encodeURIComponent(rxMsg(r))}" target="_blank" rel="noopener">Message customer</a>
    <label>Status<select data-r="${r.id}">${RX.map(s=>`<option ${s===r.status?"selected":""}>${s}</option>`).join("")}</select></label></div></div>`).join(""):'<p class="note" style="margin-top:12px">No prescriptions yet.</p>'}
 $("#rlist").onclick=async e=>{const f=e.target.dataset.f;if(!f)return;const {data,error}=await SB.storage.from("prescriptions").createSignedUrl(f,300);if(error)alert("Could not open the file.");else window.open(data.signedUrl,"_blank","noopener")};
-$("#rlist").onchange=async e=>{const id=e.target.dataset.r;if(!id)return;const {error}=await SB.from("prescriptions").update({status:e.target.value}).eq("id",id);if(error)alert("Could not update the status.")};
+$("#rlist").onchange=async e=>{const id=e.target.dataset.r;if(!id)return;const {error}=await SB.from("prescriptions").update({status:e.target.value}).eq("id",id);if(error)alert("Could not update the status.");else{refreshBadges();loadRx()}};
 
 // ---------- Careers ----------
 let jobs=[],jEdit=null;
@@ -300,6 +321,58 @@ function startAlerts(){
    .on("postgres_changes",{event:"INSERT",schema:"public",table:"applications"},p=>onNew("job application",`${p.new.name} for ${p.new.job_title}`,"careers",loadCareers))
    .on("postgres_changes",{event:"UPDATE",schema:"public",table:"orders"},p=>{if(p.new.status===5){beep();toast(`Order ${p.new.code} was cancelled`)}refreshBadges();if(!$("#t-orders").hidden)loadOrders()})
    .subscribe()}
+
+// ---------- Low stock click + CSV import/export ----------
+$("#lowList").onclick=e=>{const b=e.target.closest("[data-e]");if(b)$("#plist").onclick({target:{dataset:{e:b.dataset.e}}})};
+function parseCSV(t){
+  t=t.replace(/^\uFEFF/,"");
+  const head=t.split(/\r?\n/)[0]||"",d=(head.match(/;/g)||[]).length>(head.match(/,/g)||[]).length?";":",";
+  const rows=[];let r=[],c="",q=false;
+  for(let i=0;i<t.length;i++){const ch=t[i];
+    if(q){if(ch==='"'){if(t[i+1]==='"'){c+='"';i++}else q=false}else c+=ch}
+    else if(ch==='"')q=true;
+    else if(ch===d){r.push(c);c=""}
+    else if(ch==="\n"||ch==="\r"){if(ch==="\r"&&t[i+1]==="\n")i++;r.push(c);c="";if(r.some(x=>x.trim()!==""))rows.push(r);r=[]}
+    else c+=ch}
+  r.push(c);if(r.some(x=>x.trim()!==""))rows.push(r);return rows}
+const csvCell=v=>{v=v==null?"":String(v);return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+function download(name,text){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\uFEFF"+text],{type:"text/csv;charset=utf-8"}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+$("#csvTpl").onclick=()=>download("products-template.csv","name,category,price,stock,description,sale_price\nBody Lotion 400ml,Cosmetics,12000,20,Smooth daily moisturiser,\nVitamin C 1000mg (30 tabs),Supplements,9000,30,,8000\n");
+$("#csvOut").onclick=()=>download("products.csv",["name,category,price,stock,description,sale_price",...products.map(p=>[p.name,p.category,p.price,p.stock,p.description,p.sale_price].map(csvCell).join(","))].join("\n"));
+let plan=null;
+$("#csvIn").onchange=async e=>{
+  const f=e.target.files[0],box=$("#csvPrev");plan=null;if(!f)return;
+  const rows=parseCSV(await f.text());
+  if(rows.length<2){box.innerHTML='<p class="msg e">The file is empty. Use the template to see the format.</p>';return}
+  if(rows.length>1001){box.innerHTML='<p class="msg e">Please import up to 1000 products at a time.</p>';return}
+  const H=rows[0].map(h=>h.trim().toLowerCase().replace(/\s+/g,"_")),col=n=>H.indexOf(n);
+  for(const need of ["name","category","price"])if(col(need)<0){box.innerHTML=`<p class="msg e">The file needs a "${need}" column. Use the template to see the format.</p>`;return}
+  const byName=new Map(products.map(p=>[p.name.trim().toLowerCase(),p])),seen=new Set(),adds=[],ups=[],errs=[];
+  rows.slice(1).forEach((r,k)=>{
+    const line=k+2,get=n=>col(n)<0?undefined:(r[col(n)]||"").trim(),name=get("name");
+    if(!name){errs.push(`Row ${line}: no name`);return}
+    const key=name.toLowerCase();if(seen.has(key)){errs.push(`Row ${line}: "${name}" appears twice in the file`);return}seen.add(key);
+    const cat=cats.find(c=>c.toLowerCase()===(get("category")||"").toLowerCase());
+    if(!cat){errs.push(`Row ${line}: "${name}" has an unknown category "${get("category")||""}". Add it under Categories first.`);return}
+    const num=v=>{const n=parseInt(String(v).replace(/[^\d-]/g,""),10);return Number.isFinite(n)?n:NaN};
+    const price=num(get("price"));if(!(price>0)){errs.push(`Row ${line}: "${name}" needs a price above 0`);return}
+    const row={name,category:cat,price};
+    if(col("stock")>=0&&get("stock")!==""){const s=num(get("stock"));if(!(s>=0)){errs.push(`Row ${line}: "${name}" has an invalid stock number`);return}row.stock=s}
+    if(col("description")>=0)row.description=get("description")||null;
+    if(col("sale_price")>=0){const sp=get("sale_price");if(sp===""||sp==null)row.sale_price=null;else{const v=num(sp);if(!(v>=0&&v<price)){errs.push(`Row ${line}: "${name}" sale price must be lower than the price`);return}row.sale_price=v}}
+    const ex=byName.get(key);if(ex)ups.push({id:ex.id,row});else adds.push({...row,stock:row.stock??0,active:true})});
+  plan={adds,ups};
+  box.innerHTML=`<p><b>${adds.length}</b> new, <b>${ups.length}</b> to update${errs.length?`, <b style="color:#d92d20">${errs.length}</b> with problems`:""}.</p>
+   ${errs.length?`<ul class="note" style="margin:8px 0 8px 18px;color:#d92d20">${errs.slice(0,8).map(x=>`<li>${esc(x)}</li>`).join("")}${errs.length>8?`<li>…and ${errs.length-8} more</li>`:""}</ul>`:""}
+   ${adds.length||ups.length?`<button class="btn" id="csvGo" type="button">Apply ${adds.length+ups.length} changes</button> <span class="note">Rows with problems are skipped.</span>`:""}<div class="msg" id="csvM"></div>`;
+  const go=$("#csvGo");if(go)go.onclick=applyPlan};
+async function applyPlan(){
+  const m=$("#csvM"),go=$("#csvGo");go.disabled=true;let done=0;const total=plan.adds.length+plan.ups.length;
+  try{
+    for(let i=0;i<plan.adds.length;i+=50){const r=await SB.from("products").insert(plan.adds.slice(i,i+50));if(r.error)throw r.error;done+=Math.min(50,plan.adds.length-i);m.textContent=`Saving ${done} of ${total}…`}
+    for(const u of plan.ups){const r=await SB.from("products").update(u.row).eq("id",u.id);if(r.error)throw r.error;done++;if(done%10===0)m.textContent=`Saving ${done} of ${total}…`}
+    m.className="msg o";m.textContent=`Done: ${plan.adds.length} added, ${plan.ups.length} updated.`;plan=null;$("#csvIn").value="";go.hidden=true;loadProducts()
+  }catch(err){m.className="msg e";m.textContent=`Stopped after ${done} of ${total}. Nothing after that was saved. Check the file and try again.`;go.disabled=false}}
 boot();
 </script>
 </body>
