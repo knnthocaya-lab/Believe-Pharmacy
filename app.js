@@ -3,10 +3,10 @@
 const WHATSAPP = "256709714959"; // pharmacy WhatsApp number, no + or spaces
 // ===== BRANCH DETAILS: edit the text inside the quotes =====
 const BRANCHES = [
-  { name: "Olya Road",   address: "Plot 26, Olya Road, Pece-Laroo, Gulu City East",   phones: ["0393001498"], hours: "Mon–Sat 8:00–20:00", map: "https://www.google.com/maps/dir/?api=1&destination=2.770177,32.301311", embed: "https://maps.google.com/maps?q=2.770177,32.301311&z=17&output=embed" },
-  { name: "Acholi Road", address: "Plot 5, Acholi Road, Bus Park, Gulu", phones: ["0393003737"],               hours: "Mon–Sat 8:00–20:00", map: "https://www.google.com/maps/dir/?api=1&destination=2.7695191,32.2992171", embed: "https://maps.google.com/maps?q=2.7695191,32.2992171&z=17&output=embed" }
+  { name: "Olya Road",   address: "Plot 26, Olya Road, Pece-Laroo, Gulu City East",   phones: ["0393001498"], hours: "Mon–Sat 8:00–20:00", map: "https://www.google.com/maps/dir/?api=1&destination=2.770177,32.301311" },
+  { name: "Acholi Road", address: "Plot 5, Acholi Road, Bus Park, Gulu", phones: ["0393003737"],               hours: "Mon–Sat 8:00–20:00", map: "https://www.google.com/maps/dir/?api=1&destination=2.7695191,32.2992171" }
 ]; // hours: leave "" to hide it.
-// MAPS: by default each map is found from the address. For an exact pin, open the branch on Google Maps, click Share > Embed a map, copy the link inside src="..." into embed, and paste the normal share link into map.
+// DIRECTIONS: paste the Google Maps link for each branch into map. The Get directions button opens it.
 const EMAIL = "";
 // ===== SOCIAL LINKS: paste the full page link between the quotes (leave "" to hide) =====
 const SOCIALS = {
@@ -177,14 +177,24 @@ async function showAuth(m,msg){
   $("#vAuth").hidden=!!cur;$("#vAcc").hidden=!cur;
   if(cur)await renderAcc();else{setMode(m||"in");$("#aMsg").textContent=msg||"Track your orders and check out faster."}
   if(!$("#auth").open)$("#auth").showModal()}
+const cancelHTML=o=>{
+  if(o.status===5||o.status===4)return "";
+  if(o.status<=1&&!o.paid)return `<div style="margin-top:10px"><button class="link" data-cancel="${o.id}" style="color:#d92d20">Cancel this order</button></div>`;
+  return `<div class="note" style="margin-top:10px">To change or cancel this order, <a href="${waUrl("Hello, I would like to change or cancel my order "+o.code)}" target="_blank" rel="noopener" style="color:var(--p)">message us on WhatsApp</a>.</div>`};
 async function renderAcc(){
   $("#vAcc").innerHTML='<p class="note">Loading…</p>';
   const {data:os,error}=await SB.from("orders").select("*").eq("user_id",cur.id).order("created_at",{ascending:false});
   const list=error?'<p class="err">Could not load your orders. Please try again.</p>':os.length?os.map(o=>`<div class="ord"><div class="h"><b>${esc(o.code)}</b><span>${fmt(o.total)}${o.paid?" · Paid":""}</span></div><small>${new Date(o.created_at).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})} · ${esc(o.delivery||"")}${o.address?" · "+esc(o.address):""}</small>
-  ${o.status===5?'<div class="stat" style="color:#d92d20;margin-top:10px">Cancelled</div>':`<div class="steps" aria-hidden="true">${STEPS.map((x,i)=>`<i class="${i<=o.status?"on":""}"></i>`).join("")}</div><div class="stat">${STEPS[o.status]||""}</div>`}<small>${(o.items||[]).map(x=>x.q+" × "+esc(x.n)).join(", ")}</small></div>`).join(""):'<p class="note" style="margin-top:8px">No orders yet. Add a product to your basket to place your first order.</p>';
+  ${o.status===5?'<div class="stat" style="color:#d92d20;margin-top:10px">Cancelled</div>':`<div class="steps" aria-hidden="true">${STEPS.map((x,i)=>`<i class="${i<=o.status?"on":""}"></i>`).join("")}</div><div class="stat">${STEPS[o.status]||""}</div>`}<small>${(o.items||[]).map(x=>x.q+" × "+esc(x.n)).join(", ")}</small>${cancelHTML(o)}</div>`).join(""):'<p class="note" style="margin-top:8px">No orders yet. Add a product to your basket to place your first order.</p>';
   $("#vAcc").innerHTML=`<h3>Your account</h3><p class="note">${esc(cur.name)} · ${esc(cur.phone)} · ${esc(cur.email)}</p>${flash}${cur.admin?'<p style="margin-top:12px"><a class="btn sm" href="admin.html">Open admin dashboard</a></p>':""}<h4 style="margin-top:18px">Your orders</h4>${list}<div style="display:flex;gap:16px;margin-top:20px"><button class="btn sm" data-close>Close</button><button class="link" id="out">Sign out</button></div>`;
   flash=""}
 $("#auth").addEventListener("click",async e=>{
+  const cid=e.target.dataset&&e.target.dataset.cancel;
+  if(cid){
+    if(!confirm("Cancel this order? The items go back into stock and this cannot be undone."))return;
+    const {error}=await SB.rpc("cancel_my_order",{p_id:Number(cid)});
+    if(error)alert(/TOO_LATE/.test(error.message)?"This order is already being prepared or has been paid, so it can't be cancelled here. Please message us on WhatsApp.":"We could not cancel the order. Please try again, or message us on WhatsApp.");
+    await renderAcc();refreshProducts();return}
   if(e.target.closest("[data-close]")||e.target===$("#auth"))$("#auth").close();
   if(e.target.id==="out"){await SB.auth.signOut();cur=null;navUser();$("#auth").close()}});
 $("#aSwap").onclick=()=>setMode(mode==="in"?"up":"in");
@@ -289,8 +299,8 @@ setTheme(root.dataset.theme);navUser();
 function renderBranches(){
   const ph=n=>`<a href="tel:+256${n.slice(1)}">${n.replace(/(\d{4})(\d{3})(\d{3})/,"$1 $2 $3")}</a>`;
   const gq=b=>encodeURIComponent(b.address+", Gulu, Uganda");
-  $("#branches").innerHTML=BRANCHES.map(b=>`<div><h4>${esc(b.name)}</h4><p>${esc(b.address)}<br>${b.phones.map(ph).join(" · ")}${b.hours?"<br>"+esc(b.hours):""}<br><a href="${esc(b.map||"https://www.google.com/maps/search/?api=1&query="+gq(b))}" target="_blank" rel="noopener">Get directions</a></p><iframe title="Map showing the ${esc(b.name)} branch" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="${esc(b.embed||"https://maps.google.com/maps?q="+gq(b)+"&output=embed")}"></iframe></div>`).join("")+
-  `<div><img class="dicon" src="delivery.svg" alt="" width="64" height="64"><h4>Fast delivery</h4><p>Delivery and WhatsApp orders<br><a href="https://wa.me/${WHATSAPP}" target="_blank" rel="noopener">+${WHATSAPP.replace(/(\d{3})(\d{3})(\d{3})(\d{3})/,"$1 $2 $3 $4")}</a>${EMAIL?`<br><a href="mailto:${esc(EMAIL)}">${esc(EMAIL)}</a>`:""}</p></div>`}
+  $("#branches").innerHTML=BRANCHES.map(b=>`<div><h4>${esc(b.name)}</h4><p>${esc(b.address)}<br>${b.phones.map(ph).join(" · ")}${b.hours?"<br>"+esc(b.hours):""}</p><a class="btn sm" href="${esc(b.map||"https://www.google.com/maps/search/?api=1&query="+gq(b))}" target="_blank" rel="noopener">Get directions</a></div>`).join("")+
+  `<div><h4>Fast delivery</h4><p>Delivery and WhatsApp orders<br><a href="https://wa.me/${WHATSAPP}" target="_blank" rel="noopener">+${WHATSAPP.replace(/(\d{3})(\d{3})(\d{3})(\d{3})/,"$1 $2 $3 $4")}</a>${EMAIL?`<br><a href="mailto:${esc(EMAIL)}">${esc(EMAIL)}</a>`:""}</p></div>`}
 function renderSocials(){
   const I={
    instagram:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>',

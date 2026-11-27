@@ -298,6 +298,7 @@ function startAlerts(){
    .on("postgres_changes",{event:"INSERT",schema:"public",table:"orders"},p=>onNew("order",`${p.new.code} · ${fmt(p.new.total)}`,"orders",loadOrders))
    .on("postgres_changes",{event:"INSERT",schema:"public",table:"prescriptions"},p=>onNew("prescription",`RX-${p.new.id} from ${p.new.name||"a customer"}`,"rx",loadRx))
    .on("postgres_changes",{event:"INSERT",schema:"public",table:"applications"},p=>onNew("job application",`${p.new.name} for ${p.new.job_title}`,"careers",loadCareers))
+   .on("postgres_changes",{event:"UPDATE",schema:"public",table:"orders"},p=>{if(p.new.status===5){beep();toast(`Order ${p.new.code} was cancelled`)}refreshBadges();if(!$("#t-orders").hidden)loadOrders()})
    .subscribe()}
 boot();
 </script>
