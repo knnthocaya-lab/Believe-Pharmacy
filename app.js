@@ -54,6 +54,8 @@ const seen=new Set();try{JSON.parse(sessionStorage.getItem("believe-seen")||"[]"
 function markSeen(img){img.classList.add("loaded");const u=img.currentSrc||img.src;if(u&&!seen.has(u)){seen.add(u);try{sessionStorage.setItem("believe-seen",JSON.stringify([...seen].slice(-200)))}catch(e){}}}
 let gridVer=0,gridBuilt=-1;
 let prodsReady=false,prodsTried=false;
+let waProduct=null;
+const WA_Q=[["I would like to place an order","Hello BELIEVE Pharmacy, I would like to place an order."],["Is a product in stock?","Hello, I would like to check if a product is in stock: "],["Do you deliver to my area?","Hello, do you deliver to my area? I am in "],["Opening hours and branches","Hello, what are your opening hours and where are your branches?"],["I have a question for the pharmacist","Hello, I have a question for the pharmacist."]];
 const SKEL=Array(8).fill('<div class="card sk"><div class="ph"></div><div class="b"><span class="sl" style="width:40%"></span><span class="sl" style="width:85%"></span><span class="sl" style="width:50%"></span></div></div>').join("");
 const prod=i=>P.find(x=>String(x.id)===String(i));
 function buildChips(){const cats=["All",...new Set(P.map(p=>p.c))];const qc=new URLSearchParams(location.search).get("cat");cat=cats.includes(qc)?qc:(cats.includes(cat)?cat:"All");
@@ -83,6 +85,7 @@ function renderProductPage(){
   const el=$("#pp"),id=new URLSearchParams(location.search).get("id"),p=prod(id);
   if(!p){el.innerHTML='<p class="empty">We could not find that product. <a href="shop.html" style="color:var(--p)">Back to the shop</a></p>';return}
   document.title=p.n+" · BELIEVE Pharmacy";
+  waProduct=p.n;renderWa();
   const out=p.stock!=null&&p.stock<=0,st=p.stock==null?"":out?"Out of stock":p.stock<=5?"Only "+p.stock+" left":"In stock";
   const rel=P.filter(x=>x.c===p.c&&String(x.id)!==String(p.id)).slice(0,4);
   let q=1;
@@ -395,3 +398,18 @@ init();
   const count=new Map();
   els.forEach(e=>{const p=e.parentElement,i=count.get(p)||0;count.set(p,i+1);e.style.setProperty("--d",Math.min(i,5)*0.08+"s");e.classList.add("rv");io.observe(e)});
 })();
+
+// ===== WhatsApp quick questions =====
+function renderWa(){
+  const q=WA_Q.map(x=>x.slice());
+  if(waProduct)q[1]=["Is "+waProduct+" in stock?","Hello, is "+waProduct+" in stock?"];
+  $("#waQ").innerHTML=q.map(([l,m])=>`<a href="${waUrl(m)}" target="_blank" rel="noopener">${esc(l)}</a>`).join("")}
+(function(){
+  const b=document.getElementById("waBtn"),pop=document.getElementById("waPop");if(!b||!pop)return;
+  const open=o=>{pop.hidden=!o;b.setAttribute("aria-expanded",String(o))};
+  b.addEventListener("click",e=>{e.preventDefault();open(pop.hidden)});
+  document.getElementById("waX").addEventListener("click",()=>{open(false);b.focus()});
+  pop.addEventListener("click",e=>{if(e.target.closest("a"))open(false)});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!pop.hidden){open(false);b.focus()}});
+  document.addEventListener("click",e=>{if(!pop.hidden&&!e.target.closest(".wa-wrap"))open(false)});
+  renderWa()})();
