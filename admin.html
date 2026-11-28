@@ -219,7 +219,7 @@ const first=n=>String(n||"").trim().split(" ")[0]||"there";
 function orderMsg(o,c){
   const hi=`Hello ${first(c.name)}, `,tail=" Thank you for choosing BELIEVE Pharmacy.";
   const where=o.address?o.address:(o.branch?o.branch+" branch":"our pharmacy");
-  const t={0:`we have received your order ${o.code} (${fmt(o.total)}).`,1:`your order ${o.code} is confirmed.`,2:`your order ${o.code} is being prepared.`,
+  const t={0:`we have received your order ${o.code} (${fmt(o.total)}).`,1:`your order ${o.code} is confirmed. Please note that confirmed orders cannot be cancelled and goods once sold are not returnable.`,2:`your order ${o.code} is being prepared.`,
     3:o.address?`your order ${o.code} is on its way to ${where}.`:`your order ${o.code} is ready for collection at ${where}.`,
     4:`your order ${o.code} is complete.`,5:`your order ${o.code} has been cancelled.`}[o.status];
   return hi+t+(o.paid||o.status===0||o.status>=4?"":" Total "+fmt(o.total)+".")+tail}

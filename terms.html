@@ -40,7 +40,7 @@
 <p>Prices are in Ugandan shillings (UGX). Sale prices last until the end time shown. We try to keep prices, photos and stock accurate, but mistakes can happen and we may cancel an order affected by an obvious error. Product pages give general information and are not medical advice.</p>
 
 <h2>Orders and payment</h2>
-<p>When you place an order, you are asking us to supply the items. We accept it when we confirm it to you, and we may decline or limit an order. You can cancel an order yourself from your account while it is marked Received or Confirmed and has not been paid. After that, message us and we will try to help. Pay by <span class="fill">[the payment methods you accept, for example Mobile Money or cash on delivery or collection]</span>.</p>
+<p>When you place an order, you are asking us to supply the items. We accept it when we confirm it to you, and we may decline or limit an order. You can cancel an order yourself from your account while it is marked Received and has not been paid. Once we confirm an order, it cannot be cancelled. Pay by <span class="fill">[the payment methods you accept, for example Mobile Money or cash on delivery or collection]</span>.</p>
 
 <h2>Delivery and collection</h2>
 <p>We deliver in <span class="fill">[delivery areas]</span> and you can collect from either branch. Delivery fee: <span class="fill">[fee or free-delivery amount]</span>. Times we give are estimates, not guarantees.</p>
@@ -52,7 +52,7 @@
 <p>Advice from our pharmacists is general guidance based on what you tell us. It is not a diagnosis and does not replace seeing a doctor. In an emergency go to the nearest hospital straight away.</p>
 
 <h2>Returns and refunds</h2>
-<p>For safety, medicines and health products cannot be returned once sold unless they are faulty, damaged or not what you ordered. <span class="fill">[return window and refund method]</span> Contact us as soon as you notice a problem.</p>
+<p>Goods once sold are not returnable. This does not affect any rights you have by law. Please check your order when you collect or receive it, and tell us straight away if something is wrong. <span class="fill">[adviser to confirm]</span></p>
 
 <h2>Using the site</h2>
 <p>Do not misuse the site, try to break into it, or send us false or harmful content. We may suspend accounts that do.</p>
@@ -98,6 +98,7 @@
     <select id="cBranch" aria-label="Branch to collect from"></select>
     <input id="cAddr" placeholder="Delivery address" aria-label="Delivery address" hidden>
     <select id="cPay" aria-label="Payment"><option>Pay with MTN Mobile Money</option><option>Pay with Airtel Money</option><option>Pay on collection / delivery</option></select>
+    <label class="chk" id="agreeRow"><input type="checkbox" id="cAgree"><span>I understand that once an order is confirmed it cannot be cancelled, and goods once sold are not returnable. <a href="terms.html" style="color:var(--p)">Terms</a></span></label>
     <button class="btn" id="place">Place order</button>
     <div class="ok" id="oOk"></div>
   </footer>

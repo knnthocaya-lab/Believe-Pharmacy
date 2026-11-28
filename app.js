@@ -143,6 +143,7 @@ $("#place").onclick=async()=>{
   if(!ids.length){alert("Your basket is empty.");return}
   const del=$("#cDel").value,deliver=del.startsWith("Deliver"),addr=deliver?$("#cAddr").value.trim():"",pay=$("#cPay").value,branch=deliver?null:$("#cBranch").value;
   if(del.startsWith("Deliver")&&!addr){alert("Enter your delivery address.");return}
+  if(!$("#cAgree").checked){alert("Please tick the box to confirm you understand that a confirmed order cannot be cancelled and that goods once sold are not returnable.");$("#cAgree").focus();return}
   const items=ids.map(i=>({id:prod(i).id,n:prod(i).n,q:cart[i],p:prod(i).p})),total=items.reduce((t,x)=>t+x.p*x.q,0);
   const lines=items.map(x=>`• ${x.q} × ${x.n} — ${fmt(x.p*x.q)}`).join("\n");
   if(!SB){wa(`New order, BELIEVE Pharmacy\n${lines}\nTotal: ${fmt(total)}\n${del}${addr?": "+addr:""}${branch?" ("+branch+")":""}\n${pay}`);cart={};sync();closeC();return}
@@ -158,8 +159,8 @@ $("#place").onclick=async()=>{
     alert("We could not place your order. Please try again, or order on WhatsApp.");return}
   const L=ord.items.map(x=>`• ${x.q} × ${x.n} — ${fmt(x.p*x.q)}`).join("\n");
   const msg=`New order ${ord.code}, BELIEVE Pharmacy\n${L}\nTotal: ${fmt(ord.total)}\nName: ${cur.name}\nPhone: ${cur.phone}\n${del}${addr?": "+addr:""}${branch?" ("+branch+")":""}\n${pay}`;
-  flash=`<div class="ok" style="display:block;margin-top:12px">Order ${ord.code} placed. Total ${fmt(ord.total)}. <a href="${waUrl(msg)}" target="_blank" rel="noopener"><b>Also tell us on WhatsApp</b></a></div>`;
-  cart={};sync();closeC();refreshProducts();showAuth();
+  flash=`<div class="ok" style="display:block;margin-top:12px">Order ${ord.code} placed. Total ${fmt(ord.total)}. We will confirm it shortly. You can cancel it from your account until we confirm it. <a href="${waUrl(msg)}" target="_blank" rel="noopener"><b>Also tell us on WhatsApp</b></a></div>`;
+  cart={};$("#cAgree").checked=false;sync();closeC();refreshProducts();showAuth();
 };
 $("#rxForm").onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target),o=$("#rxOk"),file=$("#rxFile").files[0];o.style.display="block";
   if(!SB){wa(`Prescription request, BELIEVE Pharmacy\nName: ${f.get("name")}\nPhone: ${f.get("phone")}\n${f.get("delivery")}\nNotes: ${f.get("notes")||"-"}\n(I will attach the prescription file in this chat.)`);o.textContent="WhatsApp opened. Attach your prescription photo in the chat and send it.";return}
@@ -203,8 +204,8 @@ async function showAuth(m,msg){
   if(!$("#auth").open)$("#auth").showModal()}
 const cancelHTML=o=>{
   if(o.status===5||o.status===4)return "";
-  if(o.status<=1&&!o.paid)return `<div style="margin-top:10px"><button class="link" data-cancel="${o.id}" style="color:#d92d20">Cancel this order</button></div>`;
-  return `<div class="note" style="margin-top:10px">To change or cancel this order, <a href="${waUrl("Hello, I would like to change or cancel my order "+o.code)}" target="_blank" rel="noopener" style="color:var(--p)">message us on WhatsApp</a>.</div>`};
+  if(o.status===0&&!o.paid)return `<div style="margin-top:10px"><button class="link" data-cancel="${o.id}" style="color:#d92d20">Cancel this order</button> <span class="note">You can cancel until we confirm it.</span></div>`;
+  return `<div class="note" style="margin-top:10px">Confirmed orders cannot be cancelled, and goods once sold are not returnable. To change delivery details, <a href="${waUrl("Hello, I would like to change the delivery details of my order "+o.code)}" target="_blank" rel="noopener" style="color:var(--p)">message us on WhatsApp</a>.</div>`};
 async function renderAcc(){
   $("#vAcc").innerHTML='<p class="note">Loading…</p>';
   const {data:os,error}=await SB.from("orders").select("*").eq("user_id",cur.id).order("created_at",{ascending:false});
@@ -217,7 +218,7 @@ $("#auth").addEventListener("click",async e=>{
   if(cid){
     if(!confirm("Cancel this order? The items go back into stock and this cannot be undone."))return;
     const {error}=await SB.rpc("cancel_my_order",{p_id:Number(cid)});
-    if(error)alert(/TOO_LATE/.test(error.message)?"This order is already being prepared or has been paid, so it can't be cancelled here. Please message us on WhatsApp.":"We could not cancel the order. Please try again, or message us on WhatsApp.");
+    if(error)alert(/TOO_LATE/.test(error.message)?"This order has already been confirmed or paid, so it cannot be cancelled. Goods once sold are not returnable.":"We could not cancel the order. Please try again, or message us on WhatsApp.");
     await renderAcc();refreshProducts();return}
   if(e.target.closest("[data-close]")||e.target===$("#auth"))$("#auth").close();
   if(e.target.id==="out"){await SB.auth.signOut();cur=null;navUser();$("#auth").close()}});
